@@ -8,7 +8,8 @@ export function generatePDF(
   site: SiteConditions,
   moduleName: string = "Custom Module",
   techName: string = "",
-  companyName: string = ""
+  companyName: string = "",
+  projectDetails?: { clientName: string, projectName: string, concessionaria: string }
 ) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -51,7 +52,28 @@ export function generatePDF(
   doc.setFont("helvetica", "normal");
   doc.setTextColor(100);
   doc.text(`Data de Emissão: ${new Date().toLocaleDateString('pt-BR')}`, pageWidth / 2, y, { align: "center" });
-  y += 15;
+  y += 10;
+
+  if (techName) {
+    doc.text(`Responsável Técnico: ${techName}`, pageWidth / 2, y, { align: "center" });
+    y += 10;
+  }
+
+  if (projectDetails) {
+    doc.setTextColor(50);
+    doc.setFont("helvetica", "bold");
+    doc.text("Detalhes do Projeto:", margin, y);
+    doc.setFont("helvetica", "normal");
+    y += 6;
+    doc.text(`Cliente: ${projectDetails.clientName || 'Não informado'}`, margin, y);
+    y += 6;
+    doc.text(`Projeto: ${projectDetails.projectName || 'Não informado'}`, margin, y);
+    y += 6;
+    doc.text(`Concessionária: ${projectDetails.concessionaria || 'Não informada'}`, margin, y);
+    y += 10;
+  }
+
+  y += 5;
 
   // --- Section 1: Parâmetros do Projeto ---
   const sectionTitle = (title: string) => {

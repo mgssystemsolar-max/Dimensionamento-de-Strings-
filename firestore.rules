@@ -1,0 +1,120 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: modules
+    // Document ID: auto-generated
+    // Fields:
+    //   - name: string (required, max 100 chars)
+    //   - manufacturer: string (required, max 100 chars)
+    //   - power: number (required, > 0)
+    //   - voc: number (required, > 0)
+    //   - vmp: number (required, > 0)
+    //   - isc: number (required, > 0)
+    //   - imp: number (required, > 0)
+    //   - tempCoeffVoc: number (required, <= 0)
+    //   - tempCoeffVmp: number (required, <= 0)
+    //   - createdAt: timestamp (required, immutable)
+    //   - authorUid: string (required, immutable)
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.authorUid;
+    }
+
+    function uidUnchanged() {
+      return !('authorUid' in request.resource.data) ||
+        request.resource.data.authorUid == request.auth.uid;
+    }
+
+    function uidNotModified() {
+      return !('authorUid' in request.resource.data) ||
+        request.resource.data.authorUid == resource.data.authorUid;
+    }
+
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    function isPositive(field) {
+      return request.resource.data[field] is number && request.resource.data[field] > 0;
+    }
+
+    function isNonPositive(field) {
+      return request.resource.data[field] is number && request.resource.data[field] <= 0;
+    }
+
+    function isRecent(field) {
+      return request.resource.data[field] is timestamp &&
+             request.time.toMillis() - request.resource.data[field].toMillis() < 60000 &&
+             request.resource.data[field].toMillis() - request.time.toMillis() < 60000;
+    }
+
+    function areImmutableFieldsUnchanged(fields) {
+      return !request.resource.data.diff(resource.data).affectedKeys().hasAny(fields);
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidModule(data) {
+      return hasOnlyAllowedFields(['name', 'manufacturer', 'power', 'voc', 'vmp', 'isc', 'imp', 'tempCoeffVoc', 'tempCoeffVmp', 'createdAt', 'authorUid']) &&
+             validStringLength('name', 1, 100) &&
+             validStringLength('manufacturer', 1, 100) &&
+             isPositive('power') &&
+             isPositive('voc') &&
+             isPositive('vmp') &&
+             isPositive('isc') &&
+             isPositive('imp') &&
+             isNonPositive('tempCoeffVoc') &&
+             isNonPositive('tempCoeffVmp') &&
+             request.resource.data.createdAt is timestamp &&
+             request.resource.data.authorUid is string &&
+             request.resource.data.authorUid.size() > 0;
+    }
+
+    match /modules/{moduleId} {
+      // Anyone can read modules (public database of modules)
+      allow read: if true;
+      
+      allow create: if isAuthenticated() && 
+                    isValidModule(request.resource.data) && 
+                    uidUnchanged() &&
+                    isRecent('createdAt');
+                    
+      allow update: if isAuthenticated() && 
+                    isDocOwner() &&
+                    isValidModule(request.resource.data) && 
+                    uidNotModified() &&
+                    areImmutableFieldsUnchanged(['createdAt', 'authorUid']);
+                    
+      allow delete: if isAuthenticated() && isDocOwner();
+    }
+  }
+}

@@ -9,6 +9,7 @@ import { extractInverterData, extractModuleData } from './utils/ocr';
 import { generatePDF } from './utils/pdf';
 import { initiateGoogleAuth, searchDriveFiles, downloadDriveFile, DriveFile } from './utils/drive';
 import { LoginScreen } from './components/LoginScreen';
+import { ElectricalDiagramPrint } from './components/ElectricalDiagramPrint';
 
 interface HistoryItem {
   id: string;
@@ -46,6 +47,14 @@ export default function App() {
     minTemp: -10,
     maxTemp: 40,
   });
+
+  const [projectDetails, setProjectDetails] = useState({
+    clientName: "",
+    projectName: "",
+    concessionaria: "Enel Ceará"
+  });
+
+  const [showDiagramModal, setShowDiagramModal] = useState(false);
 
   // Optimize: Use useMemo instead of useEffect+useState for derived result
   // This prevents double renders on every input change
@@ -245,7 +254,7 @@ export default function App() {
 
   const handleExportPDF = () => {
     if (result) {
-      generatePDF(result, module, inverter, site, selectedPreset || "Módulo Personalizado", techName, companyName);
+      generatePDF(result, module, inverter, site, selectedPreset || "Módulo Personalizado", techName, companyName, projectDetails);
       setShowPdfModal(false);
     }
   };
@@ -709,6 +718,61 @@ export default function App() {
                 />
               </div>
             </motion.section>
+
+            {/* PROJECT DETAILS SECTION */}
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+            >
+              <div className="bg-slate-50/50 border-b border-slate-100 px-6 py-4 flex items-center gap-3">
+                <FileText className="text-indigo-500" size={18} />
+                <h2 className="font-semibold text-slate-900">Detalhes do Projeto</h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cliente</label>
+                  <input 
+                    type="text" 
+                    value={projectDetails.clientName} 
+                    onChange={(e) => setProjectDetails({...projectDetails, clientName: e.target.value})}
+                    placeholder="Nome do Cliente"
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Projeto</label>
+                  <input 
+                    type="text" 
+                    value={projectDetails.projectName} 
+                    onChange={(e) => setProjectDetails({...projectDetails, projectName: e.target.value})}
+                    placeholder="Nome do Projeto"
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Concessionária</label>
+                  <select 
+                    value={projectDetails.concessionaria}
+                    onChange={(e) => setProjectDetails({...projectDetails, concessionaria: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500 bg-white"
+                  >
+                    <option value="Enel Ceará">Enel Ceará</option>
+                    <option value="Enel São Paulo">Enel São Paulo</option>
+                    <option value="Enel Rio de Janeiro">Enel Rio de Janeiro</option>
+                    <option value="Cemig">Cemig</option>
+                    <option value="CPFL">CPFL</option>
+                    <option value="Copel">Copel</option>
+                    <option value="Equatorial">Equatorial</option>
+                    <option value="Neoenergia">Neoenergia</option>
+                    <option value="Light">Light</option>
+                    <option value="Energisa">Energisa</option>
+                    <option value="Outra">Outra</option>
+                  </select>
+                </div>
+              </div>
+            </motion.section>
           </div>
 
           {/* RESULTS SECTION */}
@@ -785,6 +849,17 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+                  
+                  {/* Actions */}
+                  <div className="pt-4 border-t border-slate-100">
+                    <button 
+                      onClick={() => setShowDiagramModal(true)}
+                      disabled={!result || result.errorFields.length > 0}
+                      className="w-full flex items-center justify-center gap-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed px-4 py-3 rounded-xl transition-colors shadow-sm"
+                    >
+                      <FileText size={18} /> Gerar Diagrama Unifilar
+                    </button>
+                  </div>
 
                   {/* Warnings */}
                   {result?.warnings && result.warnings.length > 0 && (
@@ -837,6 +912,18 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {showDiagramModal && result && (
+        <ElectricalDiagramPrint
+          module={module}
+          inverter={inverter}
+          result={result}
+          concessionaria={projectDetails.concessionaria}
+          clientName={projectDetails.clientName}
+          projectName={projectDetails.projectName}
+          onClose={() => setShowDiagramModal(false)}
+        />
+      )}
     </div>
   );
 }

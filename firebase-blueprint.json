@@ -1,0 +1,29 @@
+{
+  "entities": {
+    "Module": {
+      "title": "Module",
+      "description": "Photovoltaic module specifications",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Model name" },
+        "manufacturer": { "type": "string", "description": "Manufacturer name" },
+        "power": { "type": "number", "description": "Power (Pmax) in Watts" },
+        "voc": { "type": "number", "description": "Open Circuit Voltage (Voc) in Volts" },
+        "vmp": { "type": "number", "description": "Maximum Power Voltage (Vmp) in Volts" },
+        "isc": { "type": "number", "description": "Short Circuit Current (Isc) in Amps" },
+        "imp": { "type": "number", "description": "Maximum Power Current (Imp) in Amps" },
+        "tempCoeffVoc": { "type": "number", "description": "Temperature Coefficient of Voc (%/°C)" },
+        "tempCoeffVmp": { "type": "number", "description": "Temperature Coefficient of Vmp (%/°C)" },
+        "createdAt": { "type": "timestamp", "description": "Creation timestamp" },
+        "authorUid": { "type": "string", "description": "User ID of the creator" }
+      },
+      "required": ["name", "manufacturer", "power", "voc", "vmp", "isc", "imp", "tempCoeffVoc", "tempCoeffVmp", "createdAt", "authorUid"]
+    }
+  },
+  "firestore": {
+    "modules": {
+      "schema": { "$ref": "#/entities/Module" },
+      "description": "Collection of photovoltaic modules"
+    }
+  }
+}
