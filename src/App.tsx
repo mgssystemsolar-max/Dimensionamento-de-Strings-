@@ -10,6 +10,7 @@ import { generatePDF } from './utils/pdf';
 import { initiateGoogleAuth, searchDriveFiles, downloadDriveFile, DriveFile } from './utils/drive';
 import { LoginScreen } from './components/LoginScreen';
 import { ElectricalDiagramPrint } from './components/ElectricalDiagramPrint';
+import { auth, db } from './firebase';
 
 interface HistoryItem {
   id: string;
@@ -77,14 +78,46 @@ export default function App() {
 
   // Load history on mount
   useEffect(() => {
-    const saved = localStorage.getItem('solarHistory');
-    if (saved) {
-      try {
-        setHistory(JSON.parse(saved));
-      } catch (e) {
-        console.error("Failed to parse history", e);
+    const loadHistory = async () => {
+      if (auth.currentUser) {
+        try {
+          const { collection, query, getDocs, orderBy, limit } = await import('firebase/firestore');
+          const q = query(
+            collection(db, `users/${auth.currentUser.uid}/history`),
+            limit(20)
+          );
+          const querySnapshot = await getDocs(q);
+          const firestoreHistory: HistoryItem[] = [];
+          querySnapshot.forEach((doc) => {
+            const data = doc.data();
+            firestoreHistory.push({
+              id: doc.id,
+              date: data.date,
+              moduleName: data.moduleName,
+              result: data.result
+            });
+          });
+          if (firestoreHistory.length > 0) {
+            setHistory(firestoreHistory);
+            return;
+          }
+        } catch (error) {
+          console.error("Error loading history from Firestore", error);
+        }
       }
-    }
+
+      // Fallback to local storage
+      const saved = localStorage.getItem('solarHistory');
+      if (saved) {
+        try {
+          setHistory(JSON.parse(saved));
+        } catch (e) {
+          console.error("Failed to parse history", e);
+        }
+      }
+    };
+
+    loadHistory();
 
     // Listen for auth messages
     const handleAuthMessage = (event: MessageEvent) => {
@@ -98,7 +131,7 @@ export default function App() {
     };
     window.addEventListener('message', handleAuthMessage);
     return () => window.removeEventListener('message', handleAuthMessage);
-  }, []);
+  }, [isLoggedIn]);
 
   const fetchDriveFiles = async (token: string) => {
     setIsDriveLoading(true);
@@ -230,22 +263,40 @@ export default function App() {
     }
   };
 
-  const saveToHistory = () => {
-    if (!result) return;
+  const saveToHistory = async () => {
+    if (!result || !auth.currentUser) return;
     const newItem: HistoryItem = {
       id: Date.now().toString(),
       date: new Date().toLocaleDateString(),
       moduleName: selectedPreset || "Módulo Personalizado",
       result: result
     };
+    
+    // Save locally for immediate feedback
     const newHistory = [newItem, ...history].slice(0, 20); // Keep last 20
     setHistory(newHistory);
     localStorage.setItem('solarHistory', JSON.stringify(newHistory));
+
+    // Save to Firestore
+    try {
+      const { doc, setDoc } = await import('firebase/firestore');
+      const docRef = doc(db, `users/${auth.currentUser.uid}/history/${newItem.id}`);
+      await setDoc(docRef, {
+        userId: auth.currentUser.uid,
+        date: newItem.date,
+        moduleName: newItem.moduleName,
+        result: newItem.result
+      });
+    } catch (error) {
+      console.error("Error saving to Firestore", error);
+    }
   };
 
-  const clearHistory = () => {
+  const clearHistory = async () => {
     setHistory([]);
     localStorage.removeItem('solarHistory');
+    // Note: We don't delete from Firestore here to keep it simple, 
+    // but we could if needed.
   };
 
   const [showPdfModal, setShowPdfModal] = useState(false);

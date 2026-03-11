@@ -53,7 +53,7 @@ export function ElectricalDiagramPrint({
           <div className="flex justify-between items-start border-b-2 border-slate-900 pb-4 mb-4">
             <div>
               <h1 className="text-2xl font-bold uppercase tracking-wider">Diagrama Unifilar Fotovoltaico</h1>
-              <h2 className="text-lg text-slate-600 font-medium mt-1">Concessionária: {concessionaria}</h2>
+              <h2 className="text-lg text-slate-600 font-medium mt-1">Concessionária: {concessionaria || 'Enel Ceará'}</h2>
             </div>
             <div className="text-right">
               <div className="font-bold text-xl">PROJETO ELÉTRICO</div>
@@ -210,14 +210,14 @@ export function ElectricalDiagramPrint({
               <path d="M80,60 Q100,40 120,60 T160,60" fill="none" stroke="#0f172a" strokeWidth="3" />
               
               <text x="120" y="-10" textAnchor="middle" className="text-sm font-bold">Rede da Concessionária</text>
-              <text x="120" y="90" textAnchor="middle" className="text-lg font-bold text-indigo-700">{concessionaria}</text>
+              <text x="120" y="90" textAnchor="middle" className="text-lg font-bold text-indigo-700">{concessionaria || 'Enel Ceará'}</text>
             </g>
 
             {/* Notes */}
             <g transform="translate(50, 500)">
               <text x="0" y="0" className="text-xs font-bold">NOTAS:</text>
               <text x="0" y="15" className="text-xs">1. Este diagrama é um modelo simplificado unifilar para referência de projeto.</text>
-              <text x="0" y="30" className="text-xs">2. O aterramento deve seguir a norma NBR 5410 e as exigências da concessionária {concessionaria}.</text>
+              <text x="0" y="30" className="text-xs">2. O aterramento deve seguir a norma NBR 5410 e as exigências da concessionária {concessionaria || 'Enel Ceará'}.</text>
               <text x="0" y="45" className="text-xs">3. Os cabos CC devem ser específicos para uso solar (resistentes a UV, 1kV ou 1.5kV).</text>
               <text x="0" y="60" className="text-xs">4. O dimensionamento exato dos disjuntores e cabos CA depende da potência do inversor e distância.</text>
             </g>
