@@ -315,7 +315,7 @@ export default function App() {
         }));
         setSelectedInverterPreset("Inversor OCR (Lido)");
       } catch (err) {
-        setOcrError("Falha ao ler imagem. Tente novamente com uma imagem mais clara.");
+        setOcrError("Falha ao ler o arquivo. Tente novamente com um arquivo mais nítido.");
         console.error(err);
       } finally {
         setIsOcrLoading(false);
@@ -337,7 +337,7 @@ export default function App() {
         setModuleDiscrepancies([]);
         setCompareMessage(null);
       } catch (err) {
-        setModuleOcrError("Falha ao ler imagem. Tente novamente com uma imagem mais clara.");
+        setModuleOcrError("Falha ao ler o arquivo. Tente novamente com um arquivo mais nítido.");
         console.error(err);
       } finally {
         setIsModuleOcrLoading(false);

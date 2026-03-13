@@ -1,139 +1,105 @@
 import { InverterSpecs, ModuleSpecs } from './solar';
+import { GoogleGenAI, Type } from "@google/genai";
 
-// Singleton worker instance to avoid recreation overhead
-let tesseractWorker: any = null;
-let pdfjsLib: any = null;
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-async function getTesseractWorker() {
-  if (tesseractWorker) return tesseractWorker;
-  
-  const Tesseract = await import('tesseract.js');
-  tesseractWorker = await Tesseract.createWorker('eng');
-  return tesseractWorker;
-}
-
-async function getPdfJs() {
-  if (pdfjsLib) return pdfjsLib;
-  
-  pdfjsLib = await import('pdfjs-dist');
-  // Set worker source using the version from the imported library
-  pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
-  
-  return pdfjsLib;
-}
-
-async function convertPdfToImages(file: File): Promise<string[]> {
-  const pdf = await getPdfJs();
-  const arrayBuffer = await file.arrayBuffer();
-  const pdfDoc = await pdf.getDocument({ data: arrayBuffer }).promise;
-  const images: string[] = [];
-
-  // Process first 2 pages max (datasheets usually have specs early)
-  const numPages = Math.min(pdfDoc.numPages, 2);
-
-  for (let i = 1; i <= numPages; i++) {
-    const page = await pdfDoc.getPage(i);
-    const viewport = page.getViewport({ scale: 2.0 }); // Higher scale for better OCR
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    if (context) {
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
-      images.push(canvas.toDataURL('image/png'));
-    }
-  }
-  return images;
-}
-
-async function extractText(file: File): Promise<string> {
-  const worker = await getTesseractWorker();
-  
-  try {
-    if (file.type === 'application/pdf') {
-      const images = await convertPdfToImages(file);
-      let fullText = '';
-      for (const image of images) {
-        const { data: { text } } = await worker.recognize(image);
-        fullText += text + '\n';
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        resolve(reader.result.split(',')[1]);
       }
-      return fullText;
-    } else {
-      // Image file
-      const { data: { text } } = await worker.recognize(file);
-      return text;
-    }
-  } catch (error) {
-    console.error("OCR Error:", error);
-    throw error;
-  }
-  // Do not terminate worker here, reuse it for next time
-}
+    };
+    reader.onerror = error => reject(error);
+  });
+};
 
 export async function extractInverterData(file: File): Promise<Partial<InverterSpecs>> {
-  const text = await extractText(file);
+  try {
+    const base64Data = await fileToBase64(file);
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: file.type,
+              data: base64Data,
+            },
+          },
+          {
+            text: "Extraia as especificações técnicas deste datasheet de inversor solar. Retorne APENAS um objeto JSON com os valores numéricos encontrados.",
+          },
+        ],
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            maxInputVoltage: { type: Type.NUMBER, description: "Tensão máxima de entrada (Max Input Voltage / Max DC Voltage) em Volts" },
+            minMpptVoltage: { type: Type.NUMBER, description: "Tensão mínima da faixa de MPPT (Min MPPT Voltage) em Volts" },
+            maxMpptVoltage: { type: Type.NUMBER, description: "Tensão máxima da faixa de MPPT (Max MPPT Voltage) em Volts" },
+            maxInputCurrent: { type: Type.NUMBER, description: "Corrente máxima de entrada (Max Input Current) em Amperes" },
+            numMppts: { type: Type.NUMBER, description: "Número de rastreadores MPPT (Number of MPPTs)" },
+          },
+        },
+      },
+    });
+
+    const text = response.text;
+    if (!text) return {};
     
-  // Regex patterns from user request, slightly adapted
-  const vmaxMatch = text.match(/(1000|1100|1200|1500)/);
-  const mpptMatch = text.match(/(\d{3})\s*-\s*(\d{3})/);
-  const currentMatch = text.match(/(\d{1,2})A/);
-
-  const specs: Partial<InverterSpecs> = {};
-
-  if (vmaxMatch) {
-    specs.maxInputVoltage = parseInt(vmaxMatch[0]);
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Gemini OCR Error:", error);
+    throw error;
   }
-
-  if (mpptMatch) {
-    specs.minMpptVoltage = parseInt(mpptMatch[1]);
-    specs.maxMpptVoltage = parseInt(mpptMatch[2]);
-  }
-
-  if (currentMatch) {
-    specs.maxInputCurrent = parseInt(currentMatch[1]);
-  }
-
-  return specs;
 }
 
 export async function extractModuleData(file: File): Promise<Partial<ModuleSpecs>> {
-  const text = await extractText(file);
+  try {
+    const base64Data = await fileToBase64(file);
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: file.type,
+              data: base64Data,
+            },
+          },
+          {
+            text: "Extraia as especificações técnicas (STC - Standard Test Conditions) deste datasheet de módulo/painel solar fotovoltaico. Retorne APENAS um objeto JSON com os valores numéricos encontrados.",
+          },
+        ],
+      },
+      config: {
+        responseMimeType: "application/json",
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            power: { type: Type.NUMBER, description: "Potência nominal máxima (Pmax) em Watts" },
+            voc: { type: Type.NUMBER, description: "Tensão de circuito aberto (Voc / Open Circuit Voltage) em Volts" },
+            vmp: { type: Type.NUMBER, description: "Tensão de máxima potência (Vmp / Maximum Power Voltage) em Volts" },
+            isc: { type: Type.NUMBER, description: "Corrente de curto-circuito (Isc / Short Circuit Current) em Amperes" },
+            imp: { type: Type.NUMBER, description: "Corrente de máxima potência (Imp / Maximum Power Current) em Amperes" },
+            tempCoeffVoc: { type: Type.NUMBER, description: "Coeficiente de temperatura do Voc (Temperature Coefficient of Voc) em %/°C. Geralmente é um valor negativo, ex: -0.25" },
+            tempCoeffVmp: { type: Type.NUMBER, description: "Coeficiente de temperatura do Pmax (Temperature Coefficient of Pmax) em %/°C. Geralmente é um valor negativo, ex: -0.35" },
+          },
+        },
+      },
+    });
+
+    const text = response.text;
+    if (!text) return {};
     
-  // Improved Regex patterns for Module Datasheets
-  // Power: Look for 3 digits followed by W, e.g., 550W, 550 W
-  const powerMatch = text.match(/(\d{3})\s*W/i);
-  
-  // Voc: Look for Voc or Open Circuit Voltage followed by number
-  const vocMatch = text.match(/Voc.*?(\d{2,3}[.,]\d{1,2})/i) || text.match(/Open.*?Voltage.*?(\d{2,3}[.,]\d{1,2})/i);
-  
-  // Vmp: Look for Vmp or Voltage at Pmax followed by number
-  const vmpMatch = text.match(/Vmp.*?(\d{2,3}[.,]\d{1,2})/i) || text.match(/Voltage.*?Pmax.*?(\d{2,3}[.,]\d{1,2})/i);
-  
-  // Isc: Look for Isc or Short Circuit Current followed by number
-  const iscMatch = text.match(/Isc.*?(\d{1,2}[.,]\d{1,2})/i) || text.match(/Short.*?Current.*?(\d{1,2}[.,]\d{1,2})/i);
-  
-  // Imp: Look for Imp or Current at Pmax followed by number
-  const impMatch = text.match(/Imp.*?(\d{1,2}[.,]\d{1,2})/i) || text.match(/Current.*?Pmax.*?(\d{1,2}[.,]\d{1,2})/i);
-  
-  // Temp Coeffs: Look for negative number followed by %/C
-  // This is harder to distinguish, so we might need to look for specific keywords like "Temperature Coefficient of Voc"
-  const tempVocMatch = text.match(/Temperature.*?Voc.*?(-0[.,]\d{2,4})/i);
-  const tempVmpMatch = text.match(/Temperature.*?Pmax.*?(-0[.,]\d{2,4})/i); // Often Pmax coeff is used if Vmp not found, but let's try to be specific if possible or default
-
-  const specs: Partial<ModuleSpecs> = {};
-
-  const parseValue = (match: RegExpMatchArray | null) => {
-    if (!match) return undefined;
-    return parseFloat(match[1].replace(',', '.'));
-  };
-
-  if (powerMatch) specs.power = parseValue(powerMatch);
-  if (vocMatch) specs.voc = parseValue(vocMatch);
-  if (vmpMatch) specs.vmp = parseValue(vmpMatch);
-  if (iscMatch) specs.isc = parseValue(iscMatch);
-  if (impMatch) specs.imp = parseValue(impMatch);
-  if (tempVocMatch) specs.tempCoeffVoc = parseValue(tempVocMatch);
-  
-  return specs;
+    return JSON.parse(text);
+  } catch (error) {
+    console.error("Gemini OCR Error:", error);
+    throw error;
+  }
 }
