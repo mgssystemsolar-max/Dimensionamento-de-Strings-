@@ -239,6 +239,15 @@ export function calculateStringSizing(
       } else if (modulesPerString > maxModules) {
         warnings.push(`Atenção: Não é possível atingir a potência desejada sem exceder a tensão máxima do inversor.`);
       } else {
+        // Check current with parallel strings
+        const stringsPerMppt = Math.ceil(strings / numMppts);
+        const totalImpPerMppt = stringsPerMppt * module.imp;
+
+        if (totalImpPerMppt > inverter.maxInputCurrent) {
+           warnings.push(`Atenção: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de ${totalImpPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A). Haverá limitação de potência (clipping).`);
+           warningFields.push("site.desiredPowerKw", "inverter.maxInputCurrent");
+        }
+
         recommendedModules = actualModules;
         recommendedStrings = strings;
         totalSystemPowerKw = (actualModules * module.power) / 1000;
