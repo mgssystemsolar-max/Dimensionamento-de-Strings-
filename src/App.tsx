@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Sun, Zap, Thermometer, AlertTriangle, CheckCircle, Info, Settings, Upload, FileText, History, Download, Trash2, Camera, Search, Database, X, LogOut, User, ImageIcon, RefreshCw, CheckCircle2, Shield } from 'lucide-react';
+import { Sun, Zap, Thermometer, AlertTriangle, CheckCircle, Info, Settings, Upload, FileText, History, Download, Trash2, Camera, Search, Database, X, LogOut, User, ImageIcon, RefreshCw, CheckCircle2, Shield, BookOpen, HelpCircle } from 'lucide-react';
 import { InputGroup } from './components/InputGroup';
 import { Diagram } from './components/Diagram';
 import { calculateStringSizing, ModuleSpecs, InverterSpecs, SiteConditions, SizingResult } from './utils/solar';
@@ -80,7 +80,7 @@ export default function App() {
   });
 
   const [showDiagramModal, setShowDiagramModal] = useState(false);
-  const [currentView, setCurrentView] = useState<'dashboard' | 'sizing' | 'settings' | 'admin'>('sizing');
+  const [currentView, setCurrentView] = useState<'dashboard' | 'sizing' | 'settings' | 'admin' | 'help'>('sizing');
   const [companyLogo, setCompanyLogo] = useState<string | undefined>(localStorage.getItem('companyLogo') || undefined);
 
   // Optimize: Use useMemo instead of useEffect+useState for derived result
@@ -516,6 +516,114 @@ export default function App() {
               {/* Placeholder for future admin settings */}
               <div className="p-4 border border-slate-200 rounded-xl bg-slate-50">
                 <p className="text-sm text-slate-600 text-center py-8">Nenhuma configuração pendente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    if (currentView === 'help') {
+      return (
+        <div className="max-w-4xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">Manual do Usuário & Suporte</h2>
+          
+          <div className="mb-6 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-start gap-3">
+            <RefreshCw className="text-blue-500 mt-0.5 flex-shrink-0" size={18} />
+            <div>
+              <h4 className="text-sm font-semibold text-blue-900">Atualização Automática</h4>
+              <p className="text-sm text-blue-700 mt-1">Este manual, bem como o banco de dados de equipamentos, são atualizados automaticamente toda vez que houver necessidade, garantindo que você tenha sempre as informações mais recentes.</p>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            {/* O que o app faz */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <Info className="text-indigo-500" size={20} /> O que este aplicativo faz?
+              </h3>
+              <p className="text-slate-600 leading-relaxed">
+                Este aplicativo é uma ferramenta profissional para <strong>dimensionamento de strings fotovoltaicas</strong>. 
+                Ele ajuda engenheiros e integradores a verificar a compatibilidade entre módulos solares e inversores, 
+                garantindo que os limites de tensão (Voc) e corrente (Isc) do inversor não sejam ultrapassados, 
+                considerando as variações de temperatura do local. Além disso, gera relatórios automáticos em PDF e diagramas unifilares simplificados.
+              </p>
+            </div>
+
+            {/* Como usar */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <BookOpen className="text-amber-500" size={20} /> Como utilizar passo a passo
+              </h3>
+              
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">1</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900">01 Detalhes do Projeto</h4>
+                    <p className="text-sm text-slate-600 mt-1">Preencha os dados do cliente, local da instalação, data e concessionária. Estas informações sairão no relatório final.</p>
+                  </div>
+                </div>
+                
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">2</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900">02 Inversor</h4>
+                    <p className="text-sm text-slate-600 mt-1">Selecione um inversor no banco de dados ou insira os dados manualmente (Tensão Máxima, Tensão MPPT, Corrente Máxima e Número de MPPTs).</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">3</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900">03 Temperaturas</h4>
+                    <p className="text-sm text-slate-600 mt-1">Defina a temperatura mínima e máxima do local. Isso é crucial para calcular a variação de tensão dos módulos no frio e no calor.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">4</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900">04 Módulo Fotovoltaico</h4>
+                    <p className="text-sm text-slate-600 mt-1">Escolha o módulo solar e defina a quantidade de placas por string. O sistema calculará automaticamente a tensão e corrente totais.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">5</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900">05 Resultado e Relatório</h4>
+                    <p className="text-sm text-slate-600 mt-1">Verifique se todos os parâmetros estão com o selo verde (Aprovado). Se houver algum erro (ex: Tensão muito alta), ajuste a quantidade de módulos. Por fim, clique em "Gerar Relatório" para baixar o PDF.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Suporte */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+              <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                <HelpCircle className="text-emerald-500" size={20} /> Precisa de Ajuda? (Suporte)
+              </h3>
+              <p className="text-slate-600 mb-4">
+                Caso tenha dúvidas sobre o dimensionamento, encontre algum erro ou precise adicionar novos equipamentos ao banco de dados, entre em contato com nosso suporte técnico:
+              </p>
+              <div className="bg-slate-50 p-4 rounded-lg border border-slate-200 flex flex-col sm:flex-row gap-6 flex-wrap">
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Responsável</p>
+                  <p className="text-sm font-medium text-slate-900">Márcio G. da Silva</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">WhatsApp</p>
+                  <p className="text-sm font-medium text-slate-900">+55 (88) 98836-0143</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Email</p>
+                  <p className="text-sm font-medium text-slate-900">mgssystemsolar@gmail.com</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Horário</p>
+                  <p className="text-sm font-medium text-slate-900">Seg a Sex, 08:00 às 18:00</p>
+                </div>
               </div>
             </div>
           </div>
@@ -1453,6 +1561,12 @@ export default function App() {
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentView === 'sizing' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
               >
                 <Zap size={18} /> Dimensionamento
+              </button>
+              <button 
+                onClick={() => setCurrentView('help')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentView === 'help' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
+              >
+                <BookOpen size={18} /> Manual e Suporte
               </button>
               <button 
                 onClick={() => setCurrentView('settings')}
