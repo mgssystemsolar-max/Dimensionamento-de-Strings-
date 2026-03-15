@@ -539,15 +539,40 @@ export default function App() {
           <div className="space-y-6">
             {/* O que o app faz */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-              <h3 className="text-lg font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                <Info className="text-indigo-500" size={20} /> O que este aplicativo faz?
+              <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
+                <Info className="text-indigo-500" size={20} /> Funcionalidades e Capacidades do Sistema
               </h3>
-              <p className="text-slate-600 leading-relaxed">
-                Este aplicativo é uma ferramenta profissional para <strong>dimensionamento de strings fotovoltaicas</strong>. 
-                Ele ajuda engenheiros e integradores a verificar a compatibilidade entre módulos solares e inversores, 
-                garantindo que os limites de tensão (Voc) e corrente (Isc) do inversor não sejam ultrapassados, 
-                considerando as variações de temperatura do local. Além disso, gera relatórios automáticos em PDF e diagramas unifilares simplificados.
-              </p>
+              <div className="space-y-4 text-slate-600 leading-relaxed">
+                <p>
+                  O <strong>MG Systems - Dimensionamento Fotovoltaico</strong> é uma ferramenta de engenharia avançada projetada para garantir a segurança e a eficiência de sistemas de energia solar. Ele realiza a validação técnica completa entre os arranjos de módulos (strings) e o inversor escolhido.
+                </p>
+                <ul className="list-disc pl-5 space-y-3">
+                  <li>
+                    <strong className="text-slate-800">Cálculo Termodinâmico de Tensão:</strong> Utiliza os coeficientes de temperatura (Voc e Vmp) do módulo para calcular a tensão exata da string na temperatura mais fria (onde a tensão sobe e pode queimar o inversor) e na mais quente (onde a tensão cai e pode desarmar o MPPT).
+                  </li>
+                  <li>
+                    <strong className="text-slate-800">Validação de 4 Parâmetros Críticos:</strong>
+                    <ul className="list-circle pl-5 mt-2 space-y-1 text-sm text-slate-600">
+                      <li><em>Tensão Máxima de Entrada:</em> Garante que o Voc no frio extremo não ultrapasse o limite de queima do inversor.</li>
+                      <li><em>Tensão Mínima do MPPT:</em> Garante que o Vmp no calor extremo seja suficiente para manter o inversor ligado.</li>
+                      <li><em>Tensão Máxima do MPPT:</em> Verifica se o Vmp no frio extremo está dentro da faixa ideal de trabalho do inversor.</li>
+                      <li><em>Corrente Máxima (Isc):</em> Valida se a corrente de curto-circuito da string é suportada pela entrada do inversor.</li>
+                    </ul>
+                  </li>
+                  <li>
+                    <strong className="text-slate-800">Geração de Relatório Profissional (PDF):</strong> Compila todos os dados do cliente, cálculos técnicos, status de aprovação e gera um memorial de cálculo em PDF, personalizável com a logo da sua empresa nas configurações.
+                  </li>
+                  <li>
+                    <strong className="text-slate-800">Diagrama Unifilar Automático:</strong> Desenha dinamicamente um diagrama unifilar simplificado mostrando a conexão dos módulos, proteções CC/CA, inversor e rede elétrica.
+                  </li>
+                  <li>
+                    <strong className="text-slate-800">Banco de Dados Integrado:</strong> Conta com uma biblioteca atualizável de inversores (Growatt, Deye, Huawei, Fronius, etc.) e módulos (Canadian, Jinko, Trina, etc.) para preenchimento rápido, além de permitir entrada manual de dados.
+                  </li>
+                  <li>
+                    <strong className="text-slate-800">Gestão de Projetos:</strong> Salva automaticamente o histórico de dimensionamentos no seu navegador (Dashboard) para consultas e edições futuras.
+                  </li>
+                </ul>
+              </div>
             </div>
 
             {/* Como usar */}
@@ -560,40 +585,64 @@ export default function App() {
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">1</div>
                   <div>
-                    <h4 className="font-medium text-slate-900">01 Detalhes do Projeto</h4>
-                    <p className="text-sm text-slate-600 mt-1">Preencha os dados do cliente, local da instalação, data e concessionária. Estas informações sairão no relatório final.</p>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">01</span> Detalhes do Projeto</h4>
+                    <p className="text-sm text-slate-600 mt-1">Preencha os dados do cliente, local da instalação, data e concessionária. Estas informações são essenciais para a identificação do projeto e sairão no cabeçalho do relatório final.</p>
                   </div>
                 </div>
                 
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">2</div>
                   <div>
-                    <h4 className="font-medium text-slate-900">02 Inversor</h4>
-                    <p className="text-sm text-slate-600 mt-1">Selecione um inversor no banco de dados ou insira os dados manualmente (Tensão Máxima, Tensão MPPT, Corrente Máxima e Número de MPPTs).</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">3</div>
-                  <div>
-                    <h4 className="font-medium text-slate-900">03 Temperaturas</h4>
-                    <p className="text-sm text-slate-600 mt-1">Defina a temperatura mínima e máxima do local. Isso é crucial para calcular a variação de tensão dos módulos no frio e no calor.</p>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">02</span> Inversor</h4>
+                    <p className="text-sm text-slate-600 mt-1">Selecione um inversor no banco de dados ou insira os dados manualmente (Tensão Máxima, Tensão MPPT, Corrente Máxima e Número de MPPTs). Este campo define os limites de operação que o sistema fotovoltaico deve respeitar.</p>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">4</div>
                   <div>
-                    <h4 className="font-medium text-slate-900">04 Módulo Fotovoltaico</h4>
-                    <p className="text-sm text-slate-600 mt-1">Escolha o módulo solar e defina a quantidade de placas por string. O sistema calculará automaticamente a tensão e corrente totais.</p>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">04</span> Módulo Fotovoltaico</h4>
+                    <p className="text-sm text-slate-600 mt-1">Escolha o módulo solar e defina a quantidade de placas por string. O sistema calculará automaticamente a tensão e corrente totais com base nas características do módulo e nas temperaturas locais.</p>
                   </div>
                 </div>
 
                 <div className="flex gap-4">
                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">5</div>
                   <div>
-                    <h4 className="font-medium text-slate-900">05 Resultado e Relatório</h4>
-                    <p className="text-sm text-slate-600 mt-1">Verifique se todos os parâmetros estão com o selo verde (Aprovado). Se houver algum erro (ex: Tensão muito alta), ajuste a quantidade de módulos. Por fim, clique em "Gerar Relatório" para baixar o PDF.</p>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">05</span> Resultado e Diagrama Unifilar Simplificado</h4>
+                    <p className="text-sm text-slate-600 mt-1">Verifique a análise técnica do dimensionamento. Se todos os parâmetros estiverem verdes, o sistema está aprovado. Aqui também é gerado automaticamente o diagrama unifilar simplificado mostrando a topologia da instalação.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">6</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">06</span> Histórico</h4>
+                    <p className="text-sm text-slate-600 mt-1">Acompanhe e recarregue os dimensionamentos salvos anteriormente. Permite que você continue um trabalho de onde parou ou revise projetos passados com apenas um clique.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">7</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">07</span> Gerar Relatório</h4>
+                    <p className="text-sm text-slate-600 mt-1">Com o dimensionamento aprovado, clique neste botão para exportar um memorial de cálculo em PDF profissional, pronto para ser entregue ao cliente ou à concessionária de energia.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">8</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">08</span> Dashboard de Projetos</h4>
+                    <p className="text-sm text-slate-600 mt-1">Uma visão geral de todos os seus projetos salvos. Acesse esta tela pelo menu lateral para gerenciar, visualizar estatísticas e organizar seus dimensionamentos de forma centralizada.</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center font-bold">9</div>
+                  <div>
+                    <h4 className="font-medium text-slate-900"><span className="text-indigo-600 font-bold mr-1">09</span> Configurações</h4>
+                    <p className="text-sm text-slate-600 mt-1">Personalize o aplicativo com os dados da sua empresa. Adicione o nome, CNPJ, telefone, e-mail e a logomarca que aparecerão no cabeçalho dos relatórios em PDF gerados.</p>
                   </div>
                 </div>
               </div>
@@ -634,7 +683,7 @@ export default function App() {
     if (currentView === 'settings') {
       return (
         <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">09 Configurações</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6"><span className="text-indigo-600 font-bold mr-1">09</span> Configurações</h2>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Nome da Empresa</label>
@@ -692,7 +741,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">08 Dashboard de Projetos</h2>
+              <h2 className="text-2xl font-bold text-slate-900"><span className="text-indigo-600 font-bold mr-1">08</span> Dashboard de Projetos</h2>
               <p className="text-slate-500 mt-1">Visão geral dos seus dimensionamentos recentes.</p>
             </div>
             <button 
@@ -819,7 +868,7 @@ export default function App() {
             disabled={!result}
             title="Gerar Relatório PDF"
           >
-            <FileText size={18} /> <span>07 Gerar Relatório</span>
+            <FileText size={18} /> <span><span className="text-amber-100 font-bold mr-1">07</span> Gerar Relatório</span>
           </button>
         </div>
 
@@ -828,17 +877,140 @@ export default function App() {
           {/* INPUT SECTION */}
           <div className="lg:col-span-7 space-y-6">
             
-            {/* Inverter Specs & OCR */}
+            {/* PROJECT DETAILS SECTION */}
             <motion.section 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
               className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
             >
+              <div className="bg-slate-50/50 border-b border-slate-100 px-6 py-4 flex items-center gap-3">
+                <FileText className="text-indigo-500" size={18} />
+                <h2 className="font-semibold text-slate-900"><span className="text-indigo-600 font-bold mr-1">01</span> Detalhes do Projeto</h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cliente</label>
+                  <input 
+                    type="text" 
+                    value={projectDetails.clientName} 
+                    onChange={(e) => setProjectDetails({...projectDetails, clientName: e.target.value})}
+                    placeholder="Nome do Cliente"
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Projeto</label>
+                  <input 
+                    type="text" 
+                    value={projectDetails.projectName} 
+                    onChange={(e) => setProjectDetails({...projectDetails, projectName: e.target.value})}
+                    placeholder="Nome do Projeto"
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Concessionária</label>
+                  <select 
+                    value={projectDetails.concessionaria}
+                    onChange={(e) => setProjectDetails({...projectDetails, concessionaria: e.target.value})}
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500 bg-white"
+                  >
+                    <option value="Enel Ceará">Enel Ceará</option>
+                    <option value="Enel São Paulo">Enel São Paulo</option>
+                    <option value="Enel Rio de Janeiro">Enel Rio de Janeiro</option>
+                    <option value="Cemig">Cemig</option>
+                    <option value="CPFL">CPFL</option>
+                    <option value="Copel">Copel</option>
+                    <option value="Equatorial">Equatorial</option>
+                    <option value="Neoenergia">Neoenergia</option>
+                    <option value="Light">Light</option>
+                    <option value="Energisa">Energisa</option>
+                    <option value="Outra">Outra</option>
+                  </select>
+                </div>
+                
+                {/* New precise location and time fields */}
+                <div className="sm:col-span-2 pt-4 border-t border-slate-100 mt-2">
+                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Localização e Data do Entendimento</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
+                      <input 
+                        type="date" 
+                        value={projectDetails.date} 
+                        onChange={(e) => setProjectDetails({...projectDetails, date: e.target.value})}
+                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Hora</label>
+                      <input 
+                        type="time" 
+                        value={projectDetails.time} 
+                        onChange={(e) => setProjectDetails({...projectDetails, time: e.target.value})}
+                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Rua / Endereço</label>
+                      <input 
+                        type="text" 
+                        value={projectDetails.street} 
+                        onChange={(e) => setProjectDetails({...projectDetails, street: e.target.value})}
+                        placeholder="Ex: Rua das Flores, 123"
+                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Bairro</label>
+                      <input 
+                        type="text" 
+                        value={projectDetails.neighborhood} 
+                        onChange={(e) => setProjectDetails({...projectDetails, neighborhood: e.target.value})}
+                        placeholder="Ex: Centro"
+                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Município</label>
+                        <input 
+                          type="text" 
+                          value={projectDetails.city} 
+                          onChange={(e) => setProjectDetails({...projectDetails, city: e.target.value})}
+                          placeholder="Ex: Fortaleza"
+                          className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Estado</label>
+                        <input 
+                          type="text" 
+                          value={projectDetails.state} 
+                          onChange={(e) => setProjectDetails({...projectDetails, state: e.target.value})}
+                          placeholder="Ex: CE"
+                          maxLength={2}
+                          className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500 uppercase"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.section>
+
+            {/* Inverter Specs & OCR */}
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+            >
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Settings className="text-indigo-500" size={18} />
-                  <h2 className="font-semibold text-slate-900">02 Inversor</h2>
+                  <h2 className="font-semibold text-slate-900"><span className="text-indigo-600 font-bold mr-1">02</span> Inversor</h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="cursor-pointer flex items-center gap-2 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full transition-colors border border-indigo-100">
@@ -983,16 +1155,66 @@ export default function App() {
               </div>
             </motion.section>
 
+            {/* Site Conditions */}
+            <motion.section 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+            >
+              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
+                <Thermometer className="text-rose-500" size={18} />
+                <h2 className="font-semibold text-slate-900"><span className="text-indigo-600 font-bold mr-1">03</span> Condições Locais</h2>
+              </div>
+              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <InputGroup 
+                  label="Temperatura Mínima" 
+                  value={site.minTemp} 
+                  onChange={(v) => setSite({...site, minTemp: v})} 
+                  unit="°C" 
+                  status={getFieldStatus('site.minTemp')}
+                />
+                <InputGroup 
+                  label="Temperatura Máxima" 
+                  value={site.maxTemp} 
+                  onChange={(v) => setSite({...site, maxTemp: v})} 
+                  unit="°C" 
+                  status={getFieldStatus('site.maxTemp')}
+                />
+                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 mt-2">
+                  <InputGroup 
+                    label="Potência Desejada (Opcional)" 
+                    value={site.desiredPowerKw || 0} 
+                    onChange={(v) => setSite({...site, desiredPowerKw: v})} 
+                    unit="kWp" 
+                    step={0.1}
+                    min={0}
+                    status={getFieldStatus('site.desiredPowerKw')}
+                  />
+                  <InputGroup 
+                    label="Área Disponível (Opcional)" 
+                    value={site.availableSpaceM2 || 0} 
+                    onChange={(v) => setSite({...site, availableSpaceM2: v})} 
+                    unit="m²" 
+                    step={1}
+                    min={0}
+                    status={getFieldStatus('site.availableSpaceM2')}
+                  />
+                </div>
+              </div>
+            </motion.section>
+
             {/* Module Specs with Database Search */}
             <motion.section 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25 }}
               className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-visible relative z-20"
             >
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Zap className="text-amber-500" size={18} />
-                  <h2 className="font-semibold text-slate-900">04 Módulo Fotovoltaico</h2>
+                  <h2 className="font-semibold text-slate-900"><span className="text-indigo-600 font-bold mr-1">04</span> Módulo Fotovoltaico</h2>
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -1163,177 +1385,7 @@ export default function App() {
               </div>
             </motion.section>
 
-            {/* Site Conditions */}
-            <motion.section 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
-            >
-              <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2">
-                <Thermometer className="text-rose-500" size={18} />
-                <h2 className="font-semibold text-slate-900">Condições Locais</h2>
-              </div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <InputGroup 
-                  label="Temperatura Mínima" 
-                  value={site.minTemp} 
-                  onChange={(v) => setSite({...site, minTemp: v})} 
-                  unit="°C" 
-                  status={getFieldStatus('site.minTemp')}
-                />
-                <InputGroup 
-                  label="Temperatura Máxima" 
-                  value={site.maxTemp} 
-                  onChange={(v) => setSite({...site, maxTemp: v})} 
-                  unit="°C" 
-                  status={getFieldStatus('site.maxTemp')}
-                />
-                <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 mt-2">
-                  <InputGroup 
-                    label="Potência Desejada (Opcional)" 
-                    value={site.desiredPowerKw || 0} 
-                    onChange={(v) => setSite({...site, desiredPowerKw: v})} 
-                    unit="kWp" 
-                    step={0.1}
-                    min={0}
-                    status={getFieldStatus('site.desiredPowerKw')}
-                  />
-                  <InputGroup 
-                    label="Área Disponível (Opcional)" 
-                    value={site.availableSpaceM2 || 0} 
-                    onChange={(v) => setSite({...site, availableSpaceM2: v})} 
-                    unit="m²" 
-                    step={1}
-                    min={0}
-                    status={getFieldStatus('site.availableSpaceM2')}
-                  />
-                </div>
-              </div>
-            </motion.section>
-
-            {/* PROJECT DETAILS SECTION */}
-            <motion.section 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.25 }}
-              className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
-            >
-              <div className="bg-slate-50/50 border-b border-slate-100 px-6 py-4 flex items-center gap-3">
-                <FileText className="text-indigo-500" size={18} />
-                <h2 className="font-semibold text-slate-900">01 Detalhes do Projeto</h2>
-              </div>
-              <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div className="sm:col-span-2">
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cliente</label>
-                  <input 
-                    type="text" 
-                    value={projectDetails.clientName} 
-                    onChange={(e) => setProjectDetails({...projectDetails, clientName: e.target.value})}
-                    placeholder="Nome do Cliente"
-                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Projeto</label>
-                  <input 
-                    type="text" 
-                    value={projectDetails.projectName} 
-                    onChange={(e) => setProjectDetails({...projectDetails, projectName: e.target.value})}
-                    placeholder="Nome do Projeto"
-                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Concessionária</label>
-                  <select 
-                    value={projectDetails.concessionaria}
-                    onChange={(e) => setProjectDetails({...projectDetails, concessionaria: e.target.value})}
-                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500 bg-white"
-                  >
-                    <option value="Enel Ceará">Enel Ceará</option>
-                    <option value="Enel São Paulo">Enel São Paulo</option>
-                    <option value="Enel Rio de Janeiro">Enel Rio de Janeiro</option>
-                    <option value="Cemig">Cemig</option>
-                    <option value="CPFL">CPFL</option>
-                    <option value="Copel">Copel</option>
-                    <option value="Equatorial">Equatorial</option>
-                    <option value="Neoenergia">Neoenergia</option>
-                    <option value="Light">Light</option>
-                    <option value="Energisa">Energisa</option>
-                    <option value="Outra">Outra</option>
-                  </select>
-                </div>
-                
-                {/* New precise location and time fields */}
-                <div className="sm:col-span-2 pt-4 border-t border-slate-100 mt-2">
-                  <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Localização e Data do Entendimento</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Data</label>
-                      <input 
-                        type="date" 
-                        value={projectDetails.date} 
-                        onChange={(e) => setProjectDetails({...projectDetails, date: e.target.value})}
-                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Hora</label>
-                      <input 
-                        type="time" 
-                        value={projectDetails.time} 
-                        onChange={(e) => setProjectDetails({...projectDetails, time: e.target.value})}
-                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                      />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Rua / Endereço</label>
-                      <input 
-                        type="text" 
-                        value={projectDetails.street} 
-                        onChange={(e) => setProjectDetails({...projectDetails, street: e.target.value})}
-                        placeholder="Ex: Rua das Flores, 123"
-                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Bairro</label>
-                      <input 
-                        type="text" 
-                        value={projectDetails.neighborhood} 
-                        onChange={(e) => setProjectDetails({...projectDetails, neighborhood: e.target.value})}
-                        placeholder="Ex: Centro"
-                        className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Município</label>
-                        <input 
-                          type="text" 
-                          value={projectDetails.city} 
-                          onChange={(e) => setProjectDetails({...projectDetails, city: e.target.value})}
-                          placeholder="Ex: Fortaleza"
-                          className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Estado</label>
-                        <input 
-                          type="text" 
-                          value={projectDetails.state} 
-                          onChange={(e) => setProjectDetails({...projectDetails, state: e.target.value})}
-                          placeholder="Ex: CE"
-                          maxLength={2}
-                          className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500 uppercase"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </motion.section>
+            
           </div>
 
           {/* RESULTS SECTION */}
@@ -1347,7 +1399,7 @@ export default function App() {
               {/* Main Result Card */}
               <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
                 <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                  <h2 className="font-semibold text-lg">05 Resultado e Diagrama Unifilar Simplificado</h2>
+                  <h2 className="font-semibold text-lg"><span className="text-indigo-600 font-bold mr-1">05</span> Resultado e Diagrama Unifilar Simplificado</h2>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={saveToHistory}
@@ -1473,7 +1525,7 @@ export default function App() {
                   <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <History className="text-slate-500" size={18} />
-                      <h2 className="font-semibold text-slate-900">06 Histórico</h2>
+                      <h2 className="font-semibold text-slate-900"><span className="text-indigo-600 font-bold mr-1">06</span> Histórico</h2>
                     </div>
                     <button onClick={clearHistory} className="text-slate-400 hover:text-red-500 transition-colors">
                       <Trash2 size={16} />
@@ -1554,7 +1606,7 @@ export default function App() {
                 onClick={() => setCurrentView('dashboard')}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentView === 'dashboard' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
               >
-                <History size={18} /> Dashboard
+                <History size={18} /> <span className="font-bold mr-1 opacity-70">08</span> Dashboard
               </button>
               <button 
                 onClick={() => setCurrentView('sizing')}
@@ -1572,7 +1624,7 @@ export default function App() {
                 onClick={() => setCurrentView('settings')}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${currentView === 'settings' ? 'bg-amber-50 text-amber-700' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'}`}
               >
-                <Settings size={18} /> Configurações
+                <Settings size={18} /> <span className="font-bold mr-1 opacity-70">09</span> Configurações
               </button>
               {isAdmin && (
                 <button 
