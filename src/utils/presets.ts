@@ -127,6 +127,86 @@ export const INVERTER_PRESETS: InverterPreset[] = [
     maxMpptVoltage: 1000,
     maxInputCurrent: 13,
     numMppts: 2
+  },
+
+  // HUAWEI
+  {
+    manufacturer: "Huawei",
+    name: "Huawei SUN2000-5KTL-L1",
+    maxInputVoltage: 600,
+    minMpptVoltage: 90,
+    maxMpptVoltage: 560,
+    maxInputCurrent: 12.5,
+    numMppts: 2
+  },
+  {
+    manufacturer: "Huawei",
+    name: "Huawei SUN2000-10KTL-M1",
+    maxInputVoltage: 1100,
+    minMpptVoltage: 140,
+    maxMpptVoltage: 980,
+    maxInputCurrent: 11,
+    numMppts: 2
+  },
+
+  // SOLIS
+  {
+    manufacturer: "Solis",
+    name: "Solis-1P5K-4G",
+    maxInputVoltage: 600,
+    minMpptVoltage: 90,
+    maxMpptVoltage: 520,
+    maxInputCurrent: 11,
+    numMppts: 2
+  },
+  {
+    manufacturer: "Solis",
+    name: "Solis-3P10K-4G",
+    maxInputVoltage: 1000,
+    minMpptVoltage: 160,
+    maxMpptVoltage: 850,
+    maxInputCurrent: 11,
+    numMppts: 2
+  },
+
+  // GOODWE
+  {
+    manufacturer: "GoodWe",
+    name: "GoodWe GW5000-MS",
+    maxInputVoltage: 600,
+    minMpptVoltage: 80,
+    maxMpptVoltage: 550,
+    maxInputCurrent: 12.5,
+    numMppts: 3
+  },
+  {
+    manufacturer: "GoodWe",
+    name: "GoodWe GW10K-SDT-20",
+    maxInputVoltage: 1000,
+    minMpptVoltage: 180,
+    maxMpptVoltage: 850,
+    maxInputCurrent: 16,
+    numMppts: 2
+  },
+
+  // SMA
+  {
+    manufacturer: "SMA",
+    name: "SMA Sunny Boy 5.0",
+    maxInputVoltage: 600,
+    minMpptVoltage: 175,
+    maxMpptVoltage: 500,
+    maxInputCurrent: 15,
+    numMppts: 2
+  },
+  {
+    manufacturer: "SMA",
+    name: "SMA Sunny Tripower 10.0",
+    maxInputVoltage: 1000,
+    minMpptVoltage: 320,
+    maxMpptVoltage: 800,
+    maxInputCurrent: 20,
+    numMppts: 2
   }
 ];
 
@@ -308,5 +388,68 @@ export const MODULE_PRESETS: ModulePreset[] = [
     imp: 6.67,
     tempCoeffVoc: -0.27,
     tempCoeffVmp: -0.29,
+  },
+
+  // QCELLS
+  {
+    manufacturer: "Qcells",
+    name: "Q.PEAK DUO ML-G10+ 400",
+    power: 400,
+    voc: 45.30,
+    vmp: 37.13,
+    isc: 11.14,
+    imp: 10.77,
+    tempCoeffVoc: -0.27,
+    tempCoeffVmp: -0.34,
+  },
+  {
+    manufacturer: "Qcells",
+    name: "Q.PEAK DUO XL-G11.3 570",
+    power: 570,
+    voc: 53.64,
+    vmp: 44.49,
+    isc: 13.51,
+    imp: 12.81,
+    tempCoeffVoc: -0.27,
+    tempCoeffVmp: -0.34,
+  },
+
+  // DAH SOLAR
+  {
+    manufacturer: "DAH Solar",
+    name: "DAH Solar DHM-72L9-550W",
+    power: 550,
+    voc: 49.8,
+    vmp: 42.0,
+    isc: 13.90,
+    imp: 13.10,
+    tempCoeffVoc: -0.27,
+    tempCoeffVmp: -0.35,
+  },
+
+  // BYD
+  {
+    manufacturer: "BYD",
+    name: "BYD 540W (BYD540MC-36)",
+    power: 540,
+    voc: 49.54,
+    vmp: 41.32,
+    isc: 13.89,
+    imp: 13.07,
+    tempCoeffVoc: -0.26,
+    tempCoeffVmp: -0.32,
+  },
+
+  // OSNOVO
+  {
+    manufacturer: "Osnovo",
+    name: "Osnovo OSN-550M",
+    power: 550,
+    voc: 49.8,
+    vmp: 41.5,
+    isc: 14.0,
+    imp: 13.25,
+    tempCoeffVoc: -0.27,
+    tempCoeffVmp: -0.35,
   }
 ];

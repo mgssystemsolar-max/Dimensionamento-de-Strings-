@@ -526,7 +526,7 @@ export default function App() {
     if (currentView === 'settings') {
       return (
         <div className="max-w-3xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-slate-900 mb-6">Configurações da Empresa</h2>
+          <h2 className="text-2xl font-bold text-slate-900 mb-6">09 Configurações</h2>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-6">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Nome da Empresa</label>
@@ -584,7 +584,7 @@ export default function App() {
         <div className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-end mb-8">
             <div>
-              <h2 className="text-2xl font-bold text-slate-900">Dashboard de Projetos</h2>
+              <h2 className="text-2xl font-bold text-slate-900">08 Dashboard de Projetos</h2>
               <p className="text-slate-500 mt-1">Visão geral dos seus dimensionamentos recentes.</p>
             </div>
             <button 
@@ -711,7 +711,7 @@ export default function App() {
             disabled={!result}
             title="Gerar Relatório PDF"
           >
-            <FileText size={18} /> <span>Gerar Relatório</span>
+            <FileText size={18} /> <span>07 Gerar Relatório</span>
           </button>
         </div>
 
@@ -730,7 +730,7 @@ export default function App() {
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Settings className="text-indigo-500" size={18} />
-                  <h2 className="font-semibold text-slate-900">Inversor</h2>
+                  <h2 className="font-semibold text-slate-900">02 Inversor</h2>
                 </div>
                 <div className="flex items-center gap-2">
                   <label className="cursor-pointer flex items-center gap-2 text-xs font-medium text-indigo-600 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-full transition-colors border border-indigo-100">
@@ -884,7 +884,7 @@ export default function App() {
               <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Zap className="text-amber-500" size={18} />
-                  <h2 className="font-semibold text-slate-900">Módulo Fotovoltaico</h2>
+                  <h2 className="font-semibold text-slate-900">04 Módulo Fotovoltaico</h2>
                 </div>
                 
                 <div className="flex items-center gap-2">
@@ -1113,7 +1113,7 @@ export default function App() {
             >
               <div className="bg-slate-50/50 border-b border-slate-100 px-6 py-4 flex items-center gap-3">
                 <FileText className="text-indigo-500" size={18} />
-                <h2 className="font-semibold text-slate-900">Detalhes do Projeto</h2>
+                <h2 className="font-semibold text-slate-900">01 Detalhes do Projeto</h2>
               </div>
               <div className="p-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
@@ -1239,7 +1239,7 @@ export default function App() {
               {/* Main Result Card */}
               <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
                 <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between">
-                  <h2 className="font-semibold text-lg">Resultado</h2>
+                  <h2 className="font-semibold text-lg">05 Resultado e Diagrama Unifilar Simplificado</h2>
                   <div className="flex items-center gap-3">
                     <button 
                       onClick={saveToHistory}
@@ -1365,7 +1365,7 @@ export default function App() {
                   <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <History className="text-slate-500" size={18} />
-                      <h2 className="font-semibold text-slate-900">Histórico</h2>
+                      <h2 className="font-semibold text-slate-900">06 Histórico</h2>
                     </div>
                     <button onClick={clearHistory} className="text-slate-400 hover:text-red-500 transition-colors">
                       <Trash2 size={16} />
