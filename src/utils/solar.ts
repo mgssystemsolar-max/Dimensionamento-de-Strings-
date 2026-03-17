@@ -25,6 +25,7 @@ export interface SiteConditions {
   maxTemp: number; // °C
   desiredPowerKw?: number; // kWp
   availableSpaceM2?: number; // m²
+  desiredStringsPerMppt?: number; // Number of parallel strings per MPPT
 }
 
 export interface SizingResult {
@@ -39,6 +40,7 @@ export interface SizingResult {
   warningFields: string[];
   recommendedModules?: number;
   recommendedStrings?: number;
+  recommendedStringsPerMppt?: number;
   totalSystemPowerKw?: number;
   totalAreaM2?: number;
   minStringVoltage?: number;
@@ -206,6 +208,7 @@ export function calculateStringSizing(
   // 4. Calculate Recommended Sizing based on Desired Power and Space
   let recommendedModules: number | undefined;
   let recommendedStrings: number | undefined;
+  let recommendedStringsPerMppt: number | undefined;
   let totalSystemPowerKw: number | undefined;
   let totalAreaM2: number | undefined;
 
@@ -228,17 +231,19 @@ export function calculateStringSizing(
     if (actualModules > 0) {
       // Try to distribute modules into strings
       const numMppts = inverter.numMppts || 1;
-      // We want to find a number of strings that fits the modules and respects min/max limits
-      // Simplest approach: divide modules equally among MPPTs
-      // If actualModules / numMppts > maxModules, we need more strings per MPPT (parallel), but let's assume 1 string per MPPT for simplicity first.
-      
-      let strings = numMppts;
+      let stringsPerMppt = site.desiredStringsPerMppt || 1;
+      let strings = numMppts * stringsPerMppt;
       let modulesPerString = Math.ceil(actualModules / strings);
       
       if (modulesPerString > maxModules) {
-        // Need more strings
-        strings = Math.ceil(actualModules / maxModules);
+        // Need more strings to not exceed max voltage
+        const minRequiredStrings = Math.ceil(actualModules / maxModules);
+        stringsPerMppt = Math.ceil(minRequiredStrings / numMppts);
+        strings = numMppts * stringsPerMppt;
         modulesPerString = Math.ceil(actualModules / strings);
+        if (site.desiredStringsPerMppt && stringsPerMppt > site.desiredStringsPerMppt) {
+          warnings.push(`Atenção: O número de strings por MPPT foi ajustado para ${stringsPerMppt} para não exceder a tensão máxima do inversor.`);
+        }
       }
       
       if (modulesPerString < minModules) {
@@ -248,7 +253,6 @@ export function calculateStringSizing(
         warnings.push(`Atenção: Não é possível atingir a potência desejada sem exceder a tensão máxima do inversor.`);
       } else {
         // Check current with parallel strings
-        const stringsPerMppt = Math.ceil(strings / numMppts);
         const totalImpPerMppt = stringsPerMppt * module.imp;
         const totalIscPerMppt = stringsPerMppt * module.isc;
 
@@ -262,6 +266,7 @@ export function calculateStringSizing(
 
         recommendedModules = actualModules;
         recommendedStrings = strings;
+        recommendedStringsPerMppt = stringsPerMppt;
         totalSystemPowerKw = (actualModules * module.power) / 1000;
         if (module.area) {
           totalAreaM2 = actualModules * module.area;
@@ -282,6 +287,7 @@ export function calculateStringSizing(
     warningFields,
     recommendedModules,
     recommendedStrings,
+    recommendedStringsPerMppt,
     totalSystemPowerKw,
     totalAreaM2,
     minStringVoltage: Math.max(0, minModules) * vmpMin,

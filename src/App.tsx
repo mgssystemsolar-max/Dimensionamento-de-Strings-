@@ -1389,6 +1389,7 @@ export default function App() {
                   value={module.voc} 
                   onChange={(v) => setModule({...module, voc: v})} 
                   unit="V" 
+                  min={module.vmp ? module.vmp + 0.1 : 0.1}
                   status={getFieldStatus('module.voc')}
                 />
                 <InputGroup 
@@ -1396,6 +1397,8 @@ export default function App() {
                   value={module.vmp} 
                   onChange={(v) => setModule({...module, vmp: v})} 
                   unit="V" 
+                  min={0.1}
+                  max={module.voc ? Math.max(0.1, module.voc - 0.1) : undefined}
                   status={getFieldStatus('module.vmp')}
                 />
                 <InputGroup 
@@ -1504,29 +1507,67 @@ export default function App() {
                     </div>
                   </div>
 
+                  {/* Strings per MPPT Input */}
+                  <div className="space-y-3 pt-4 border-t border-slate-100">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
+                        <Zap size={14} className="text-amber-500" /> Arranjo Desejado
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <label className="text-xs text-slate-600 font-medium">Strings/MPPT:</label>
+                        <input 
+                          type="number" 
+                          min="1" 
+                          step="1"
+                          value={site.desiredStringsPerMppt === undefined ? 1 : site.desiredStringsPerMppt}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (val === '') {
+                              // Temporarily set to 0 or undefined to allow clearing the input
+                              setSite({...site, desiredStringsPerMppt: 0});
+                            } else {
+                              const parsed = parseInt(val);
+                              if (!isNaN(parsed)) {
+                                setSite({...site, desiredStringsPerMppt: parsed});
+                              }
+                            }
+                          }}
+                          onBlur={(e) => {
+                            const val = parseInt(e.target.value);
+                            if (isNaN(val) || val < 1) {
+                              setSite({...site, desiredStringsPerMppt: 1});
+                            }
+                          }}
+                          className="w-16 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-indigo-500 focus:ring-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Recommended Sizing */}
                   {result?.recommendedModules !== undefined && (
-                    <div className="space-y-3 pt-4 border-t border-slate-100">
-                      <h3 className="text-sm font-medium text-slate-900 flex items-center gap-2">
-                        <Zap size={14} className="text-amber-500" /> Dimensionamento Recomendado
-                      </h3>
+                    <div className="space-y-3 pt-2">
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
                           <div className="text-amber-700 text-xs mb-1">Módulos Totais</div>
                           <div className="font-bold text-amber-900 text-lg">{result.recommendedModules}</div>
                         </div>
                         <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
-                          <div className="text-amber-700 text-xs mb-1">Strings Sugeridas</div>
+                          <div className="text-amber-700 text-xs mb-1">Strings Totais</div>
                           <div className="font-bold text-amber-900 text-lg">{result.recommendedStrings}</div>
+                        </div>
+                        <div className="bg-amber-50 rounded-lg p-3 border border-amber-100">
+                          <div className="text-amber-700 text-xs mb-1">Strings/MPPT Sugeridas</div>
+                          <div className="font-bold text-amber-900 text-lg">{result.recommendedStringsPerMppt}</div>
                         </div>
                         <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
                           <div className="text-slate-600 text-xs mb-1">Potência Total</div>
-                          <div className="font-bold text-slate-900">{result.totalSystemPowerKw?.toFixed(2)} kWp</div>
+                          <div className="font-bold text-slate-900 text-lg">{result.totalSystemPowerKw?.toFixed(2)} kWp</div>
                         </div>
                         {result.totalAreaM2 !== undefined && (
-                          <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
+                          <div className="bg-slate-50 rounded-lg p-3 border border-slate-200 col-span-2">
                             <div className="text-slate-600 text-xs mb-1">Área Estimada</div>
-                            <div className="font-bold text-slate-900">{result.totalAreaM2.toFixed(1)} m²</div>
+                            <div className="font-bold text-slate-900 text-lg">{result.totalAreaM2.toFixed(1)} m²</div>
                           </div>
                         )}
                       </div>
@@ -1540,13 +1581,13 @@ export default function App() {
                     </h3>
                     <div className="grid grid-cols-1 gap-2 text-sm">
                       <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50">
-                        <span className="text-slate-600">Voc Máx (@ {site.minTemp}°C)</span>
+                        <span className="text-slate-600">Tensão Voc Corrigida para Temperatura Mínima (@ {site.minTemp}°C)</span>
                         <span className="font-mono font-medium text-slate-900">
                           {result?.vocMax.toFixed(1)} V
                         </span>
                       </div>
                       <div className="flex justify-between items-center p-2 rounded-lg bg-slate-50">
-                        <span className="text-slate-600">Vmp Mín (@ {site.maxTemp}°C)</span>
+                        <span className="text-slate-600">Tensão Vmp Corrigida para Temperatura Máxima (@ {site.maxTemp}°C)</span>
                         <span className="font-mono font-medium text-slate-900">
                           {result?.vmpMin.toFixed(1)} V
                         </span>

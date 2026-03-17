@@ -201,13 +201,13 @@ export function generatePDF(
   doc.roundedRect(margin, y, pageWidth - (margin * 2), 35, 2, 2, 'FD');
   
   let calcY = y + 8;
-  doc.text(`Tensão de Circuito Aberto Máxima (Voc @ ${site.minTemp}°C):`, margin + 5, calcY);
+  doc.text(`Tensão Voc Corrigida para Temperatura Mínima (@ ${site.minTemp}°C):`, margin + 5, calcY);
   doc.setFont("helvetica", "bold");
   doc.text(`${result.vocMax.toFixed(2)} V`, pageWidth - margin - 30, calcY);
   
   calcY += 8;
   doc.setFont("helvetica", "normal");
-  doc.text(`Tensão de Operação Mínima (Vmp @ ${site.maxTemp}°C):`, margin + 5, calcY);
+  doc.text(`Tensão Vmp Corrigida para Temperatura Máxima (@ ${site.maxTemp}°C):`, margin + 5, calcY);
   doc.setFont("helvetica", "bold");
   doc.text(`${result.vmpMin.toFixed(2)} V`, pageWidth - margin - 30, calcY);
 
@@ -269,7 +269,7 @@ export function generatePDF(
     
     doc.setDrawColor(220);
     doc.setFillColor('#FFFBEB'); // Amber-50
-    doc.roundedRect(margin, y, pageWidth - (margin * 2), 25, 2, 2, 'FD');
+    doc.roundedRect(margin, y, pageWidth - (margin * 2), 35, 2, 2, 'FD');
     
     let recY = y + 8;
     doc.setFont("helvetica", "normal");
@@ -278,24 +278,30 @@ export function generatePDF(
     doc.text(`${result.recommendedModules}`, margin + 40, recY);
 
     doc.setFont("helvetica", "normal");
-    doc.text(`Strings Sugeridas:`, margin + 85, recY);
+    doc.text(`Strings Totais:`, margin + 85, recY);
     doc.setFont("helvetica", "bold");
     doc.text(`${result.recommendedStrings}`, margin + 125, recY);
 
     recY += 8;
     doc.setFont("helvetica", "normal");
-    doc.text(`Potência Total:`, margin + 5, recY);
+    doc.text(`Strings/MPPT:`, margin + 5, recY);
     doc.setFont("helvetica", "bold");
-    doc.text(`${result.totalSystemPowerKw?.toFixed(2)} kWp`, margin + 40, recY);
+    doc.text(`${result.recommendedStringsPerMppt}`, margin + 40, recY);
+
+    doc.setFont("helvetica", "normal");
+    doc.text(`Potência Total:`, margin + 85, recY);
+    doc.setFont("helvetica", "bold");
+    doc.text(`${result.totalSystemPowerKw?.toFixed(2)} kWp`, margin + 125, recY);
 
     if (result.totalAreaM2 !== undefined) {
+      recY += 8;
       doc.setFont("helvetica", "normal");
-      doc.text(`Área Estimada:`, margin + 85, recY);
+      doc.text(`Área Estimada:`, margin + 5, recY);
       doc.setFont("helvetica", "bold");
-      doc.text(`${result.totalAreaM2.toFixed(1)} m²`, margin + 125, recY);
+      doc.text(`${result.totalAreaM2.toFixed(1)} m²`, margin + 40, recY);
     }
     
-    y += 35;
+    y += 45;
   }
 
   // --- Section 4: Diagrama Unifilar Simplificado ---

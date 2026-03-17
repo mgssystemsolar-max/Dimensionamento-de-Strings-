@@ -58,6 +58,28 @@ export function InputGroup({
     }
   };
 
+  const handleBlur = () => {
+    let num = parseFloat(localValue);
+    if (isNaN(num)) {
+      num = 0;
+    }
+    
+    let corrected = false;
+    if (min !== undefined && num < min) {
+      num = min;
+      corrected = true;
+    }
+    if (max !== undefined && num > max) {
+      num = max;
+      corrected = true;
+    }
+    
+    if (corrected) {
+      setLocalValue(num.toString());
+      onChange(num);
+    }
+  };
+
   const getBorderColor = () => {
     switch (status) {
       case 'error': return 'border-red-500 focus:border-red-500 focus:ring-red-500 bg-red-50';
@@ -76,6 +98,7 @@ export function InputGroup({
           type={type}
           value={localValue}
           onChange={handleChange}
+          onBlur={handleBlur}
           step={step}
           min={min}
           max={max}
