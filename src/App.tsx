@@ -1565,13 +1565,27 @@ export default function App() {
                     </button>
                   </div>
 
+                  {/* Errors */}
+                  {result?.errors && result.errors.length > 0 && (
+                    <div className="bg-red-50 border-red-100 border rounded-xl p-4 space-y-2">
+                      <h3 className="text-sm font-semibold text-red-800 flex items-center gap-2">
+                        <AlertTriangle size={16} /> Erros Críticos
+                      </h3>
+                      <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                        {result.errors.map((e, i) => (
+                          <li key={i}>{e}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Warnings */}
                   {result?.warnings && result.warnings.length > 0 && (
-                    <div className={`${result.errorFields.length > 0 ? 'bg-red-50 border-red-100' : 'bg-amber-50 border-amber-100'} border rounded-xl p-4 space-y-2`}>
-                      <h3 className={`text-sm font-semibold ${result.errorFields.length > 0 ? 'text-red-800' : 'text-amber-800'} flex items-center gap-2`}>
-                        <AlertTriangle size={16} /> {result.errorFields.length > 0 ? 'Erros Críticos' : 'Atenção'}
+                    <div className="bg-amber-50 border-amber-100 border rounded-xl p-4 space-y-2">
+                      <h3 className="text-sm font-semibold text-amber-800 flex items-center gap-2">
+                        <AlertTriangle size={16} /> Atenção
                       </h3>
-                      <ul className={`text-sm ${result.errorFields.length > 0 ? 'text-red-700' : 'text-amber-700'} space-y-1 list-disc list-inside`}>
+                      <ul className="text-sm text-amber-700 space-y-1 list-disc list-inside">
                         {result.warnings.map((w, i) => (
                           <li key={i}>{w}</li>
                         ))}

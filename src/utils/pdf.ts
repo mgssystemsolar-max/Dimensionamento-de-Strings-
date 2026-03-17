@@ -341,14 +341,39 @@ export function generatePDF(
     doc.text("nas condições de temperatura informadas.", margin + 10, y + 23);
     y += 35;
   } else {
+    const errorCount = result.errors ? result.errors.length : 0;
     doc.setFillColor('#FEF2F2'); // Red-50
     doc.setDrawColor(220, 38, 38); // Red-600
-    doc.roundedRect(margin, y, pageWidth - (margin * 2), 30 + (result.warnings.length * 5), 2, 2, 'FD');
+    doc.roundedRect(margin, y, pageWidth - (margin * 2), 30 + (errorCount * 5), 2, 2, 'FD');
     
     doc.setTextColor(185, 28, 28); // Red-700
     doc.setFont("helvetica", "bold");
     doc.setFontSize(12);
-    doc.text("⚠ ATENÇÃO: INCOMPATIBILIDADE DETECTADA", margin + 10, y + 10);
+    doc.text("⚠ ERRO: INCOMPATIBILIDADE DETECTADA", margin + 10, y + 10);
+    
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(10);
+    doc.setTextColor(50);
+    
+    let warnY = y + 18;
+    if (result.errors) {
+      result.errors.forEach(e => {
+        doc.text(`• ${e}`, margin + 10, warnY);
+        warnY += 5;
+      });
+    }
+    y += 30 + (errorCount * 5) + 5;
+  }
+
+  if (result.warnings && result.warnings.length > 0) {
+    doc.setFillColor('#FEF3C7'); // Amber-100
+    doc.setDrawColor(217, 119, 6); // Amber-600
+    doc.roundedRect(margin, y, pageWidth - (margin * 2), 20 + (result.warnings.length * 5), 2, 2, 'FD');
+    
+    doc.setTextColor(180, 83, 9); // Amber-700
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text("⚠ ATENÇÃO", margin + 10, y + 10);
     
     doc.setFont("helvetica", "normal");
     doc.setFontSize(10);
@@ -359,7 +384,7 @@ export function generatePDF(
       doc.text(`• ${w}`, margin + 10, warnY);
       warnY += 5;
     });
-    y += 30 + (result.warnings.length * 5) + 10;
+    y += 20 + (result.warnings.length * 5) + 10;
   }
 
   // --- Signatures ---

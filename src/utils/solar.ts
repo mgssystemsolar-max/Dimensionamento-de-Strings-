@@ -33,6 +33,7 @@ export interface SizingResult {
   vocMax: number; // Voc at min temp
   vmpMin: number; // Vmp at max temp
   isCompatible: boolean;
+  errors: string[];
   warnings: string[];
   errorFields: string[];
   warningFields: string[];
@@ -50,6 +51,7 @@ export function calculateStringSizing(
   site: SiteConditions
 ): SizingResult {
   const warnings: string[] = [];
+  const errors: string[] = [];
   const errorFields: string[] = [];
   const warningFields: string[] = [];
 
@@ -57,31 +59,31 @@ export function calculateStringSizing(
 
   // Module Checks
   if (module.power <= 0) {
-    warnings.push("A potência do módulo deve ser maior que 0.");
+    errors.push("A potência do módulo deve ser maior que 0.");
     errorFields.push("module.power");
   }
   if (module.voc <= 0) {
-    warnings.push("A tensão de circuito aberto (Voc) deve ser maior que 0.");
+    errors.push("A tensão de circuito aberto (Voc) deve ser maior que 0.");
     errorFields.push("module.voc");
   }
   if (module.vmp <= 0) {
-    warnings.push("A tensão de máxima potência (Vmp) deve ser maior que 0.");
+    errors.push("A tensão de máxima potência (Vmp) deve ser maior que 0.");
     errorFields.push("module.vmp");
   }
   if (module.vmp >= module.voc && module.voc > 0) {
-    warnings.push("A tensão Vmp deve ser menor que Voc.");
+    errors.push("A tensão Vmp deve ser menor que Voc.");
     errorFields.push("module.vmp", "module.voc");
   }
   if (module.isc <= 0) {
-    warnings.push("A corrente de curto-circuito (Isc) deve ser maior que 0.");
+    errors.push("A corrente de curto-circuito (Isc) deve ser maior que 0.");
     errorFields.push("module.isc");
   }
   if (module.imp <= 0) {
-    warnings.push("A corrente de máxima potência (Imp) deve ser maior que 0.");
+    errors.push("A corrente de máxima potência (Imp) deve ser maior que 0.");
     errorFields.push("module.imp");
   }
   if (module.imp >= module.isc && module.isc > 0) {
-    warnings.push("A corrente Imp deve ser menor que Isc.");
+    errors.push("A corrente Imp deve ser menor que Isc.");
     errorFields.push("module.imp", "module.isc");
   }
   if (module.tempCoeffVoc > 0) {
@@ -99,7 +101,7 @@ export function calculateStringSizing(
 
   // Inverter Checks
   if (inverter.maxInputVoltage <= 0) {
-    warnings.push("A tensão máxima de entrada do inversor deve ser maior que 0.");
+    errors.push("A tensão máxima de entrada do inversor deve ser maior que 0.");
     errorFields.push("inverter.maxInputVoltage");
   } else if (inverter.maxInputVoltage > 2500) {
     warnings.push("A tensão máxima de entrada do inversor está muito alta (acima de 2500V). Verifique o valor.");
@@ -107,12 +109,12 @@ export function calculateStringSizing(
   }
 
   if (inverter.minMpptVoltage <= 0) {
-    warnings.push("A tensão mínima do MPPT deve ser maior que 0.");
+    errors.push("A tensão mínima do MPPT deve ser maior que 0.");
     errorFields.push("inverter.minMpptVoltage");
   }
   
   if (inverter.maxMpptVoltage <= inverter.minMpptVoltage) {
-    warnings.push("A tensão máxima do MPPT deve ser maior que a mínima.");
+    errors.push("A tensão máxima do MPPT deve ser maior que a mínima.");
     errorFields.push("inverter.maxMpptVoltage", "inverter.minMpptVoltage");
   } else if (inverter.maxMpptVoltage > 2000) {
     warnings.push("A tensão máxima do MPPT está muito alta (acima de 2000V). Verifique o valor.");
@@ -125,7 +127,7 @@ export function calculateStringSizing(
   }
   
   if (inverter.maxInputCurrent <= 0) {
-    warnings.push("A corrente máxima de entrada do inversor deve ser maior que 0.");
+    errors.push("A corrente máxima de entrada do inversor deve ser maior que 0.");
     errorFields.push("inverter.maxInputCurrent");
   } else if (inverter.maxInputCurrent > 500) {
     warnings.push("A corrente máxima de entrada do inversor está muito alta (acima de 500A). Verifique o valor.");
@@ -133,7 +135,7 @@ export function calculateStringSizing(
   }
 
   if (inverter.numMppts !== undefined && inverter.numMppts <= 0) {
-    warnings.push("O número de MPPTs deve ser pelo menos 1.");
+    errors.push("O número de MPPTs deve ser pelo menos 1.");
     errorFields.push("inverter.numMppts");
   } else if (inverter.numMppts !== undefined && inverter.numMppts > 20) {
     warnings.push("O número de MPPTs está muito alto (acima de 20). Verifique o valor.");
@@ -142,15 +144,15 @@ export function calculateStringSizing(
 
   // Site Checks
   if (site.minTemp > site.maxTemp) {
-    warnings.push("A temperatura mínima não pode ser maior que a máxima.");
+    errors.push("A temperatura mínima não pode ser maior que a máxima.");
     errorFields.push("site.minTemp", "site.maxTemp");
   }
   if (site.desiredPowerKw !== undefined && site.desiredPowerKw < 0) {
-    warnings.push("A potência desejada não pode ser negativa.");
+    errors.push("A potência desejada não pode ser negativa.");
     errorFields.push("site.desiredPowerKw");
   }
   if (site.availableSpaceM2 !== undefined && site.availableSpaceM2 < 0) {
-    warnings.push("A área disponível não pode ser negativa.");
+    errors.push("A área disponível não pode ser negativa.");
     errorFields.push("site.availableSpaceM2");
   }
 
@@ -162,6 +164,7 @@ export function calculateStringSizing(
       vocMax: 0,
       vmpMin: 0,
       isCompatible: false,
+      errors,
       warnings,
       errorFields,
       warningFields
@@ -183,17 +186,17 @@ export function calculateStringSizing(
 
   // 3. Validation
   if (vocMax > inverter.maxInputVoltage) {
-    warnings.push("A tensão de circuito aberto (Voc) de um único módulo excede a entrada máxima do inversor em baixa temperatura!");
+    errors.push("A tensão de circuito aberto (Voc) de um único módulo excede a entrada máxima do inversor em baixa temperatura!");
     errorFields.push("module.voc", "site.minTemp", "inverter.maxInputVoltage");
   }
 
   if (minModules > maxModules) {
-    warnings.push("Incompatível: O número mínimo de módulos excede o máximo permitido.");
+    errors.push("Incompatível: O número mínimo de módulos excede o máximo permitido.");
     errorFields.push("inverter.minMpptVoltage", "inverter.maxInputVoltage", "module.voc", "module.vmp");
   }
 
   if (module.isc > inverter.maxInputCurrent) {
-    warnings.push(`Incompatível: A corrente de curto-circuito do módulo (${module.isc}A) excede a corrente máxima de entrada do inversor (${inverter.maxInputCurrent}A).`);
+    errors.push(`Incompatível: A corrente de curto-circuito do módulo (${module.isc}A) excede a corrente máxima de entrada do inversor (${inverter.maxInputCurrent}A).`);
     errorFields.push("module.isc", "inverter.maxInputCurrent");
   } else if (module.imp > inverter.maxInputCurrent) {
     warnings.push(`Atenção: A corrente de operação do módulo (${module.imp}A) excede a corrente máxima do inversor (${inverter.maxInputCurrent}A). O inversor irá limitar a potência (clipping).`);
@@ -250,7 +253,7 @@ export function calculateStringSizing(
         const totalIscPerMppt = stringsPerMppt * module.isc;
 
         if (totalIscPerMppt > inverter.maxInputCurrent) {
-           warnings.push(`Incompatível: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de curto-circuito de ${totalIscPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A).`);
+           errors.push(`Incompatível: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de curto-circuito de ${totalIscPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A).`);
            errorFields.push("site.desiredPowerKw", "inverter.maxInputCurrent");
         } else if (totalImpPerMppt > inverter.maxInputCurrent) {
            warnings.push(`Atenção: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de operação de ${totalImpPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A). Haverá limitação de potência (clipping).`);
@@ -272,7 +275,8 @@ export function calculateStringSizing(
     minModules: Math.max(0, minModules),
     vocMax,
     vmpMin,
-    isCompatible: errorFields.length === 0 && (warnings.length === 0 || warnings.every(w => w.includes("clipping") || w.includes("Atenção"))),
+    isCompatible: errorFields.length === 0,
+    errors,
     warnings,
     errorFields,
     warningFields,
