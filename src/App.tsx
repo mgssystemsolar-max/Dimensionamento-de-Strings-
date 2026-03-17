@@ -1761,6 +1761,79 @@ export default function App() {
           onClose={() => setShowDiagramModal(false)}
         />
       )}
+
+      {/* Drive Modal */}
+      {showDriveModal && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[80vh]"
+          >
+            <div className="p-6 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Database size={20} className="text-blue-500" />
+                Selecionar do Google Drive
+              </h3>
+              <button onClick={() => setShowDriveModal(null)} className="text-slate-400 hover:text-slate-600 transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="p-6 flex-1 overflow-y-auto bg-slate-50">
+              {!driveToken ? (
+                <div className="flex flex-col items-center justify-center py-16 text-center bg-white rounded-xl border border-slate-200">
+                  <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mb-4">
+                    <Database size={32} className="text-blue-600" />
+                  </div>
+                  <h4 className="text-lg font-medium text-slate-900 mb-2">Conectar ao Google Drive</h4>
+                  <p className="text-sm text-slate-500 max-w-md mb-6">
+                    Conecte sua conta do Google para selecionar datasheets de inversores e módulos diretamente do seu Drive.
+                  </p>
+                  <button
+                    onClick={handleDriveAuth}
+                    className="px-6 py-2.5 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    Conectar Conta Google
+                  </button>
+                </div>
+              ) : isDriveLoading ? (
+                <div className="flex flex-col items-center justify-center py-16 bg-white rounded-xl border border-slate-200">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mb-4"></div>
+                  <p className="text-sm text-slate-500">
+                    {(isOcrLoading || isModuleOcrLoading) ? "Processando OCR do documento..." : "Carregando arquivos..."}
+                  </p>
+                </div>
+              ) : driveFiles.length === 0 ? (
+                <div className="text-center py-16 text-slate-500 bg-white rounded-xl border border-slate-200">
+                  Nenhum arquivo PDF ou imagem encontrado no seu Drive.
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                  {driveFiles.map(file => (
+                    <button
+                      key={file.id}
+                      onClick={() => handleDriveFileSelect(file.id)}
+                      className="flex flex-col items-center p-4 bg-white border border-slate-200 rounded-xl hover:bg-blue-50 hover:border-blue-300 transition-all text-left group shadow-sm"
+                    >
+                      {file.thumbnailLink ? (
+                        <img src={file.thumbnailLink} alt={file.name} className="w-full h-24 object-cover rounded-lg mb-3 border border-slate-100" referrerPolicy="no-referrer" />
+                      ) : (
+                        <div className="w-full h-24 bg-slate-50 rounded-lg mb-3 flex items-center justify-center text-slate-400 group-hover:text-blue-500 transition-colors border border-slate-100">
+                          <FileText size={32} />
+                        </div>
+                      )}
+                      <span className="text-xs font-medium text-slate-700 line-clamp-2 w-full text-center group-hover:text-blue-700">
+                        {file.name}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
