@@ -135,12 +135,12 @@ Coeficientes de Temperatura: Capture o sinal (geralmente negativo, ex: -0.28). S
 Limites MPPT: Identifique com precisão a 'Tensão de Partida' (Start-up voltage) e a 'Tensão Mínima de MPPT'.
 
 COMPATIBILIDADE TÉCNICA (Check Interno):
-Compare a Corrente de Máxima Potência (Imp) do módulo com a Corrente Máxima por Conector do inversor. Se o módulo for superior, adicione um campo 'Alerta_Seguranca' no JSON detalhando o risco de superaquecimento dos conectores.`,
+Compare a Corrente de Máxima Potência (Imp) do módulo com a Corrente Máxima por Conector do inversor. Se o módulo for superior, adicione um campo 'Alerta_Seguranca' no JSON detalhando o risco de superaquecimento dos conectores. OMITA o campo 'Alerta_Seguranca' se não houver risco ou se os dados não estiverem disponíveis. O alerta deve ter no máximo 100 caracteres.`,
           },
         ],
       },
       config: {
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
@@ -194,12 +194,12 @@ Coeficientes de Temperatura: Capture o sinal (geralmente negativo, ex: -0.28). S
 Limites MPPT: Identifique com precisão a 'Tensão de Partida' (Start-up voltage) e a 'Tensão Mínima de MPPT'.
 
 COMPATIBILIDADE TÉCNICA (Check Interno):
-Compare a Corrente de Máxima Potência (Imp) do módulo com a Corrente Máxima por Conector do inversor. Se o módulo for superior, adicione um campo 'Alerta_Seguranca' no JSON detalhando o risco de superaquecimento dos conectores.`,
+Compare a Corrente de Máxima Potência (Imp) do módulo com a Corrente Máxima por Conector do inversor. Se o módulo for superior, adicione um campo 'Alerta_Seguranca' no JSON detalhando o risco de superaquecimento dos conectores. OMITA o campo 'Alerta_Seguranca' se não houver risco ou se os dados não estiverem disponíveis. O alerta deve ter no máximo 100 caracteres.`,
           },
         ],
       },
       config: {
-        maxOutputTokens: 1024,
+        maxOutputTokens: 2048,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
