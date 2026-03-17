@@ -455,9 +455,66 @@ export default function App() {
   const [techName, setTechName] = useState("");
   const [companyName, setCompanyName] = useState("");
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (result) {
-      generatePDF(result, module, inverter, site, selectedPreset || "Módulo Personalizado", techName, companyName, projectDetails, companyLogo);
+      let diagramDataUrl: string | undefined;
+      const svgElement = document.querySelector('.diagram-svg') as SVGSVGElement;
+      
+      if (svgElement) {
+        try {
+          // Serialize SVG to string
+          const serializer = new XMLSerializer();
+          const svgString = serializer.serializeToString(svgElement);
+          
+          // Create a canvas to draw the SVG
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set canvas dimensions based on SVG viewBox or bounding box
+          const viewBox = svgElement.getAttribute('viewBox')?.split(' ');
+          const width = viewBox ? parseFloat(viewBox[2]) : 850;
+          const height = viewBox ? parseFloat(viewBox[3]) : 320;
+          
+          canvas.width = width * 2; // High resolution
+          canvas.height = height * 2;
+          
+          if (ctx) {
+            ctx.scale(2, 2); // Scale for high resolution
+            
+            // Create an image from the SVG string
+            const img = new Image();
+            const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+            
+            await new Promise((resolve, reject) => {
+              img.onload = () => {
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, width, height);
+                diagramDataUrl = canvas.toDataURL('image/png');
+                resolve(null);
+              };
+              img.onerror = reject;
+              img.src = url;
+            });
+          }
+        } catch (error) {
+          console.error("Failed to generate diagram image:", error);
+        }
+      }
+
+      generatePDF(
+        result, 
+        module, 
+        inverter, 
+        site, 
+        module.model || selectedPreset || "Módulo Personalizado", 
+        inverter.model || selectedInverterPreset || "Inversor Personalizado", 
+        techName, 
+        companyName, 
+        projectDetails, 
+        companyLogo,
+        diagramDataUrl
+      );
       setShowPdfModal(false);
     }
   };
@@ -1425,6 +1482,11 @@ export default function App() {
                       inverterMaxVoltage={inverter.maxInputVoltage}
                       inverterMpptMin={inverter.minMpptVoltage}
                       inverterMpptMax={inverter.maxMpptVoltage}
+                      moduleName={module.model || selectedPreset || "Módulo Personalizado"}
+                      modulePower={module.power}
+                      inverterName={inverter.model || selectedInverterPreset || "Inversor Personalizado"}
+                      minStringVoltage={result.minStringVoltage}
+                      maxStringVoltage={result.maxStringVoltage}
                     />
                   )}
 

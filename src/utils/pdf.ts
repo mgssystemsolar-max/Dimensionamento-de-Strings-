@@ -7,6 +7,7 @@ export function generatePDF(
   inverter: InverterSpecs,
   site: SiteConditions,
   moduleName: string = "Custom Module",
+  inverterName: string = "Custom Inverter",
   techName: string = "",
   companyName: string = "",
   projectDetails?: { 
@@ -20,7 +21,8 @@ export function generatePDF(
     city?: string,
     state?: string
   },
-  companyLogo?: string
+  companyLogo?: string,
+  diagramDataUrl?: string
 ) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -176,7 +178,7 @@ export function generatePDF(
   doc.setFont("helvetica", "bold");
   doc.text("Inversor:", margin, y);
   y += 6;
-  row("Modelo:", inverter.model || "Não especificado");
+  row("Modelo:", inverter.model || inverterName);
   y += 6;
   row("Tensão Máx. Entrada:", `${inverter.maxInputVoltage} V`);
   row("Faixa MPPT:", `${inverter.minMpptVoltage} V - ${inverter.maxMpptVoltage} V`, 90);
@@ -242,6 +244,14 @@ export function generatePDF(
   doc.setFontSize(10);
   y += 15;
 
+  // String Voltages
+  if (result.minStringVoltage !== undefined && result.maxStringVoltage !== undefined) {
+    doc.setFont("helvetica", "normal");
+    doc.text(`Tensão da String (Mínima): ${result.minStringVoltage.toFixed(2)} V`, margin, y);
+    doc.text(`Tensão da String (Máxima): ${result.maxStringVoltage.toFixed(2)} V`, margin + 85, y);
+    y += 10;
+  }
+
   if (inverter.numMppts) {
     doc.setFont("helvetica", "normal");
     doc.text(`Número de MPPTs (Entradas) do Inversor: ${inverter.numMppts}`, margin, y);
@@ -288,8 +298,31 @@ export function generatePDF(
     y += 35;
   }
 
-  // --- Section 4: Conclusão ---
-  sectionTitle("4. Conclusão e Parecer Técnico");
+  // --- Section 4: Diagrama Unifilar Simplificado ---
+  if (diagramDataUrl) {
+    // Check if we need a new page
+    if (y > pageHeight - 100) {
+      doc.addPage();
+      y = margin;
+    }
+    sectionTitle("4. Diagrama Unifilar Simplificado");
+    
+    // Add the diagram image
+    // The image is a PNG data URL
+    try {
+      const imgProps = doc.getImageProperties(diagramDataUrl);
+      const pdfWidth = pageWidth - (margin * 2);
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+      
+      doc.addImage(diagramDataUrl, 'PNG', margin, y, pdfWidth, pdfHeight);
+      y += pdfHeight + 10;
+    } catch (e) {
+      console.error("Error adding diagram to PDF:", e);
+    }
+  }
+
+  // --- Section 5: Conclusão ---
+  sectionTitle(diagramDataUrl ? "5. Conclusão e Parecer Técnico" : "4. Conclusão e Parecer Técnico");
 
   if (result.isCompatible) {
     doc.setFillColor('#DCFCE7'); // Green-100

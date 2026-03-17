@@ -40,6 +40,8 @@ export interface SizingResult {
   recommendedStrings?: number;
   totalSystemPowerKw?: number;
   totalAreaM2?: number;
+  minStringVoltage?: number;
+  maxStringVoltage?: number;
 }
 
 export function calculateStringSizing(
@@ -277,6 +279,8 @@ export function calculateStringSizing(
     recommendedModules,
     recommendedStrings,
     totalSystemPowerKw,
-    totalAreaM2
+    totalAreaM2,
+    minStringVoltage: Math.max(0, minModules) * vmpMin,
+    maxStringVoltage: Math.max(0, maxModules) * vocMax
   };
 }

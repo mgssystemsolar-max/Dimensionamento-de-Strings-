@@ -6,9 +6,14 @@ interface DiagramProps {
   inverterMaxVoltage: number;
   inverterMpptMin: number;
   inverterMpptMax: number;
+  moduleName?: string;
+  modulePower?: number;
+  inverterName?: string;
+  minStringVoltage?: number;
+  maxStringVoltage?: number;
 }
 
-export function Diagram({ minModules, maxModules, inverterMaxVoltage, inverterMpptMin, inverterMpptMax }: DiagramProps) {
+export function Diagram({ minModules, maxModules, inverterMaxVoltage, inverterMpptMin, inverterMpptMax, moduleName, modulePower, inverterName, minStringVoltage, maxStringVoltage }: DiagramProps) {
   return (
     <div className="bg-white rounded-xl p-2 sm:p-6 border border-slate-200 flex flex-col items-center justify-center gap-4 relative overflow-hidden w-full">
       <div className="w-full flex justify-between items-center mb-2">
@@ -17,7 +22,27 @@ export function Diagram({ minModules, maxModules, inverterMaxVoltage, inverterMp
       </div>
       
       <div className="w-full overflow-x-auto pb-4 flex justify-center">
-        <svg viewBox="0 0 850 320" className="w-full h-auto max-w-[1000px] min-w-[600px]" style={{ maxHeight: '400px' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 850 320" className="diagram-svg w-full h-auto max-w-[1000px] min-w-[600px]" style={{ maxHeight: '400px' }}>
+          <style>
+            {`
+              .text-\\[10px\\] { font-size: 10px; }
+              .text-\\[11px\\] { font-size: 11px; }
+              .text-\\[8px\\] { font-size: 8px; }
+              .text-\\[9px\\] { font-size: 9px; }
+              .text-\\[14px\\] { font-size: 14px; }
+              .font-mono { font-family: monospace; }
+              .font-bold { font-weight: bold; }
+              .font-medium { font-weight: 500; }
+              .fill-green-700 { fill: #15803d; }
+              .fill-slate-800 { fill: #1e293b; }
+              .fill-slate-700 { fill: #334155; }
+              .fill-slate-600 { fill: #475569; }
+              .fill-slate-500 { fill: #64748b; }
+              .fill-slate-400 { fill: #94a3b8; }
+              .fill-red-600 { fill: #dc2626; }
+              .shadow-sm { filter: drop-shadow(0 1px 2px rgb(0 0 0 / 0.05)); }
+            `}
+          </style>
           {/* Background Grid for technical feel */}
           <defs>
             <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -76,7 +101,16 @@ export function Diagram({ minModules, maxModules, inverterMaxVoltage, inverterMp
             <circle cx="75" cy="180" r="2" fill="#22c55e"/>
             
             <text x="75" y="-15" textAnchor="middle" className="text-[11px] font-mono fill-slate-800 font-bold">Arranjo Fotovoltaico</text>
+            {moduleName && (
+              <text x="75" y="-3" textAnchor="middle" className="text-[8px] font-mono fill-slate-500">{moduleName.length > 25 ? moduleName.substring(0, 25) + '...' : moduleName}</text>
+            )}
+            {modulePower && (
+              <text x="75" y="6" textAnchor="middle" className="text-[8px] font-mono fill-slate-500">{modulePower}W</text>
+            )}
             <text x="75" y="85" textAnchor="middle" className="text-[10px] font-mono fill-slate-600 font-medium">{minModules} a {maxModules} Módulos em Série</text>
+            {minStringVoltage && maxStringVoltage && (
+              <text x="75" y="95" textAnchor="middle" className="text-[8px] font-mono fill-slate-500">{minStringVoltage}V - {maxStringVoltage}V</text>
+            )}
           </g>
 
           {/* Wiring PV to String Box */}
@@ -128,6 +162,9 @@ export function Diagram({ minModules, maxModules, inverterMaxVoltage, inverterMp
           <g transform="translate(380, 40)">
             <rect x="0" y="0" width="120" height="130" rx="6" fill="#ffffff" stroke="#334155" strokeWidth="2" className="shadow-sm"/>
             <text x="60" y="-8" textAnchor="middle" className="text-[11px] font-mono fill-slate-800 font-bold">Inversor Solar</text>
+            {inverterName && (
+              <text x="60" y="145" textAnchor="middle" className="text-[8px] font-mono fill-slate-500">{inverterName.length > 25 ? inverterName.substring(0, 25) + '...' : inverterName}</text>
+            )}
             
             {/* DC/AC Symbol */}
             <line x1="0" y1="130" x2="120" y2="0" stroke="#cbd5e1" strokeWidth="1"/>
