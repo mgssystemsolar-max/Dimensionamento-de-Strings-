@@ -126,7 +126,7 @@ export async function extractInverterData(file: File): Promise<Partial<InverterS
 
 REGRAS CRÍTICAS PARA EVITAR ERROS:
 
-Fidelidade Numérica: Extraia os valores exatamente como impressos. Não arredonde e não tente deduzir valores ausentes.
+Fidelidade Numérica: Extraia os valores exatamente como impressos. Não arredonde e não tente deduzir valores ausentes. Limite todos os números a no máximo 2 casas decimais.
 
 Diferenciação de Corrente: No caso de inversores, diferencie 'Max. Input Current' (total do MPPT) de 'Max. Current per Connector' (limite físico do terminal MC4). Se o campo 'per connector' não existir, procure por 'Max. fuse rating' ou mencione no campo de modelo.
 
@@ -185,7 +185,7 @@ export async function extractModuleData(file: File): Promise<Partial<ModuleSpecs
 
 REGRAS CRÍTICAS PARA EVITAR ERROS:
 
-Fidelidade Numérica: Extraia os valores exatamente como impressos. Não arredonde e não tente deduzir valores ausentes.
+Fidelidade Numérica: Extraia os valores exatamente como impressos. Não arredonde e não tente deduzir valores ausentes. Limite todos os números a no máximo 2 casas decimais.
 
 Diferenciação de Corrente: No caso de inversores, diferencie 'Max. Input Current' (total do MPPT) de 'Max. Current per Connector' (limite físico do terminal MC4). Se o campo 'per connector' não existir, procure por 'Max. fuse rating' ou mencione no campo de modelo.
 
