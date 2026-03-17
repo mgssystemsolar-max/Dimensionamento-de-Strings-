@@ -106,49 +106,65 @@ export default function App() {
   const [isDriveLoading, setIsDriveLoading] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState<'inverter' | 'module' | null>(null);
 
-  // Load history on mount
+  // Load history on mount and listen to auth state
   useEffect(() => {
-    const loadHistory = async () => {
-      if (auth.currentUser) {
-        try {
-          const { collection, query, getDocs, orderBy, limit } = await import('firebase/firestore');
-          const q = query(
-            collection(db, `users/${auth.currentUser.uid}/history`),
-            limit(20)
-          );
-          const querySnapshot = await getDocs(q);
-          const firestoreHistory: HistoryItem[] = [];
-          querySnapshot.forEach((doc) => {
-            const data = doc.data();
-            firestoreHistory.push({
-              id: doc.id,
-              date: data.date,
-              moduleName: data.moduleName,
-              inverterName: data.inverterName,
-              result: data.result
-            });
-          });
-          if (firestoreHistory.length > 0) {
-            setHistory(firestoreHistory);
-            return;
-          }
-        } catch (error) {
-          console.error("Error loading history from Firestore", error);
-        }
-      }
+    const unsubscribeAuth = import('firebase/auth').then(({ onAuthStateChanged }) => {
+      return onAuthStateChanged(auth, (user) => {
+        if (user && user.email) {
+          const isPasswordProvider = user.providerData.some(p => p.providerId === 'password');
+          setUserEmail(user.email);
+          setIsAdmin(isPasswordProvider);
+          setIsLoggedIn(true);
+          setGoogleEmail(user.email);
 
-      // Fallback to local storage
-      const saved = localStorage.getItem('solarHistory');
-      if (saved) {
-        try {
-          setHistory(JSON.parse(saved));
-        } catch (e) {
-          console.error("Failed to parse history", e);
+          // Load history
+          const loadHistory = async () => {
+            try {
+              const { collection, query, getDocs, limit } = await import('firebase/firestore');
+              const q = query(
+                collection(db, `users/${user.uid}/history`),
+                limit(20)
+              );
+              const querySnapshot = await getDocs(q);
+              const firestoreHistory: HistoryItem[] = [];
+              querySnapshot.forEach((doc) => {
+                const data = doc.data();
+                firestoreHistory.push({
+                  id: doc.id,
+                  date: data.date,
+                  moduleName: data.moduleName,
+                  inverterName: data.inverterName,
+                  result: data.result,
+                  module: data.module,
+                  inverter: data.inverter,
+                  site: data.site,
+                  projectDetails: data.projectDetails
+                });
+              });
+              if (firestoreHistory.length > 0) {
+                setHistory(firestoreHistory);
+                return;
+              }
+            } catch (error) {
+              console.error("Error loading history from Firestore", error);
+            }
+            
+            // Fallback to local storage
+            const saved = localStorage.getItem('solarHistory');
+            if (saved) {
+              try {
+                setHistory(JSON.parse(saved));
+              } catch (e) {
+                console.error("Failed to parse history", e);
+              }
+            }
+          };
+          loadHistory();
+        } else {
+          setIsLoggedIn(false);
         }
-      }
-    };
-
-    loadHistory();
+      });
+    });
 
     // Listen for auth messages
     const handleAuthMessage = (event: MessageEvent) => {
@@ -161,8 +177,12 @@ export default function App() {
       }
     };
     window.addEventListener('message', handleAuthMessage);
-    return () => window.removeEventListener('message', handleAuthMessage);
-  }, [isLoggedIn]);
+    
+    return () => {
+      window.removeEventListener('message', handleAuthMessage);
+      unsubscribeAuth.then(unsub => unsub());
+    };
+  }, []);
 
   const fetchDriveFiles = async (token: string) => {
     setIsDriveLoading(true);
@@ -454,7 +474,11 @@ export default function App() {
         date: newItem.date,
         moduleName: newItem.moduleName,
         inverterName: newItem.inverterName,
-        result: newItem.result
+        result: newItem.result,
+        module: newItem.module,
+        inverter: newItem.inverter,
+        site: newItem.site,
+        projectDetails: newItem.projectDetails
       });
     } catch (error) {
       console.error("Error saving to Firestore", error);
@@ -464,8 +488,17 @@ export default function App() {
   const clearHistory = async () => {
     setHistory([]);
     localStorage.removeItem('solarHistory');
-    // Note: We don't delete from Firestore here to keep it simple, 
-    // but we could if needed.
+    
+    if (auth.currentUser) {
+      try {
+        const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
+        const querySnapshot = await getDocs(collection(db, `users/${auth.currentUser.uid}/history`));
+        const deletePromises = querySnapshot.docs.map(document => deleteDoc(doc(db, `users/${auth.currentUser.uid}/history/${document.id}`)));
+        await Promise.all(deletePromises);
+      } catch (error) {
+        console.error("Error clearing history from Firestore", error);
+      }
+    }
   };
 
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -557,13 +590,13 @@ export default function App() {
     return 'default';
   };
 
-  const handleLogin = (email: string, adminFlag: boolean = false) => {
+  const handleLogin = React.useCallback((email: string, adminFlag: boolean = false) => {
     setUserEmail(email);
     setIsAdmin(adminFlag);
     setIsLoggedIn(true);
     // If user provides email here, we can use it as hint for Google Auth later
     setGoogleEmail(email);
-  };
+  }, []);
 
   if (!isLoggedIn) {
     return <LoginScreen onLogin={handleLogin} />;
@@ -1750,7 +1783,16 @@ export default function App() {
              </div>
              
              <button
-               onClick={() => setIsLoggedIn(false)}
+               onClick={() => {
+                 import('firebase/auth').then(({ signOut }) => {
+                   signOut(auth).then(() => {
+                     setIsLoggedIn(false);
+                     setHistory([]);
+                     setDriveToken(null);
+                     setDriveFiles([]);
+                   }).catch(console.error);
+                 });
+               }}
                className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg"
                title="Sair / Desconectar"
              >

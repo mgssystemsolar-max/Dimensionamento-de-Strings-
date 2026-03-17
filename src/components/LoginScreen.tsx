@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sun, ArrowRight, CheckCircle, Shield, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { motion } from 'motion/react';
-import { signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
+import { signInWithPopup, GoogleAuthProvider, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 
 interface LoginScreenProps {
@@ -21,16 +21,7 @@ export function LoginScreen({ onLogin }: LoginScreenProps) {
   const [clickCount, setClickCount] = useState(0);
   const [lastClickTime, setLastClickTime] = useState(0);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email) {
-        // Simple check: if they logged in via password provider, they are admin
-        const isPasswordProvider = user.providerData.some(p => p.providerId === 'password');
-        onLogin(user.email, isPasswordProvider);
-      }
-    });
-    return () => unsubscribe();
-  }, [onLogin]);
+  // auth state is now managed globally in App.tsx
 
   const handleLogoClick = () => {
     const now = Date.now();

@@ -198,11 +198,14 @@ export function calculateStringSizing(
   const vmpMin = module.vmp * (1 + (site.maxTemp - tempSTC) * (module.tempCoeffVmp / 100));
 
   // 2. Calculate Limits
-  const maxModules = Math.floor(inverter.maxInputVoltage / vocMax);
-  const minModules = Math.ceil(inverter.minMpptVoltage / vmpMin);
+  const maxModules = vocMax > 0 ? Math.floor(inverter.maxInputVoltage / vocMax) : 0;
+  const minModules = vmpMin > 0 ? Math.ceil(inverter.minMpptVoltage / vmpMin) : 0;
 
   // 3. Validation
-  if (vocMax > inverter.maxInputVoltage) {
+  if (vocMax <= 0 || vmpMin <= 0) {
+    errors.push("Erro no cálculo de tensão corrigida. Verifique os coeficientes de temperatura e as tensões do módulo.");
+    errorFields.push("module.voc", "module.vmp", "module.tempCoeffVoc", "module.tempCoeffVmp");
+  } else if (vocMax > inverter.maxInputVoltage) {
     errors.push("A tensão de circuito aberto (Voc) de um único módulo excede a entrada máxima do inversor em baixa temperatura!");
     errorFields.push("module.voc", "site.minTemp", "inverter.maxInputVoltage");
   }
@@ -230,70 +233,73 @@ export function calculateStringSizing(
   let targetModules = 0;
   let hasTarget = false;
 
-  if (site.desiredPowerKw && site.desiredPowerKw > 0) {
-    const desiredPowerW = site.desiredPowerKw * 1000;
-    targetModules = Math.ceil(desiredPowerW / module.power);
-    hasTarget = true;
-  }
-
-  let allowedModulesBySpace = targetModules;
-  if (site.availableSpaceM2 && site.availableSpaceM2 > 0 && module.area && module.area > 0) {
-    allowedModulesBySpace = Math.floor(site.availableSpaceM2 / module.area);
-    if (hasTarget && targetModules > allowedModulesBySpace) {
-      warnings.push(`Atenção: A área disponível (${site.availableSpaceM2}m²) comporta no máximo ${allowedModulesBySpace} módulos, o que é menor que os ${targetModules} módulos necessários para a potência desejada.`);
-      warningFields.push("site.availableSpaceM2", "site.desiredPowerKw");
-    }
-    if (!hasTarget) {
-      targetModules = allowedModulesBySpace;
+  // Only calculate recommendations if the basic limits are valid
+  if (errorFields.length === 0 && maxModules > 0) {
+    if (site.desiredPowerKw && site.desiredPowerKw > 0) {
+      const desiredPowerW = site.desiredPowerKw * 1000;
+      targetModules = Math.ceil(desiredPowerW / module.power);
       hasTarget = true;
     }
-  }
 
-  if (hasTarget) {
-    const actualModules = Math.min(targetModules, allowedModulesBySpace);
-    
-    if (actualModules > 0) {
-      // Try to distribute modules into strings
-      const numMppts = inverter.numMppts || 1;
-      let stringsPerMppt = site.desiredStringsPerMppt || 1;
-      let strings = numMppts * stringsPerMppt;
-      let modulesPerString = Math.ceil(actualModules / strings);
-      
-      if (modulesPerString > maxModules) {
-        // Need more strings to not exceed max voltage
-        const minRequiredStrings = Math.ceil(actualModules / maxModules);
-        stringsPerMppt = Math.ceil(minRequiredStrings / numMppts);
-        strings = numMppts * stringsPerMppt;
-        modulesPerString = Math.ceil(actualModules / strings);
-        if (site.desiredStringsPerMppt && stringsPerMppt > site.desiredStringsPerMppt) {
-          warnings.push(`Atenção: O número de strings por MPPT foi ajustado para ${stringsPerMppt} para não exceder a tensão máxima do inversor.`);
-        }
+    let allowedModulesBySpace = targetModules;
+    if (site.availableSpaceM2 && site.availableSpaceM2 > 0 && module.area && module.area > 0) {
+      allowedModulesBySpace = Math.floor(site.availableSpaceM2 / module.area);
+      if (hasTarget && targetModules > allowedModulesBySpace) {
+        warnings.push(`Atenção: A área disponível (${site.availableSpaceM2}m²) comporta no máximo ${allowedModulesBySpace} módulos, o que é menor que os ${targetModules} módulos necessários para a potência desejada.`);
+        warningFields.push("site.availableSpaceM2", "site.desiredPowerKw");
       }
+      if (!hasTarget) {
+        targetModules = allowedModulesBySpace;
+        hasTarget = true;
+      }
+    }
+
+    if (hasTarget) {
+      const actualModules = Math.min(targetModules, allowedModulesBySpace);
       
-      if (modulesPerString < minModules) {
-        warnings.push(`Atenção: A quantidade de módulos por string (${modulesPerString}) para atingir a potência desejada é menor que o mínimo exigido pelo inversor (${minModules}).`);
-        warningFields.push("site.desiredPowerKw");
-      } else if (modulesPerString > maxModules) {
-        warnings.push(`Atenção: Não é possível atingir a potência desejada sem exceder a tensão máxima do inversor.`);
-      } else {
-        // Check current with parallel strings
-        const totalImpPerMppt = stringsPerMppt * module.imp;
-        const totalIscPerMppt = stringsPerMppt * module.isc;
-
-        if (totalIscPerMppt > inverter.maxInputCurrent) {
-           errors.push(`Incompatível: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de curto-circuito de ${totalIscPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A).`);
-           errorFields.push("site.desiredPowerKw", "inverter.maxInputCurrent");
-        } else if (totalImpPerMppt > inverter.maxInputCurrent) {
-           warnings.push(`Atenção: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de operação de ${totalImpPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A). Haverá limitação de potência (clipping).`);
-           warningFields.push("site.desiredPowerKw", "inverter.maxInputCurrent");
+      if (actualModules > 0) {
+        // Try to distribute modules into strings
+        const numMppts = inverter.numMppts || 1;
+        let stringsPerMppt = site.desiredStringsPerMppt || 1;
+        let strings = numMppts * stringsPerMppt;
+        let modulesPerString = Math.ceil(actualModules / strings);
+        
+        if (modulesPerString > maxModules) {
+          // Need more strings to not exceed max voltage
+          const minRequiredStrings = Math.ceil(actualModules / maxModules);
+          stringsPerMppt = Math.ceil(minRequiredStrings / numMppts);
+          strings = numMppts * stringsPerMppt;
+          modulesPerString = Math.ceil(actualModules / strings);
+          if (site.desiredStringsPerMppt && stringsPerMppt > site.desiredStringsPerMppt) {
+            warnings.push(`Atenção: O número de strings por MPPT foi ajustado para ${stringsPerMppt} para não exceder a tensão máxima do inversor.`);
+          }
         }
+        
+        if (modulesPerString < minModules) {
+          warnings.push(`Atenção: A quantidade de módulos por string (${modulesPerString}) para atingir a potência desejada é menor que o mínimo exigido pelo inversor (${minModules}).`);
+          warningFields.push("site.desiredPowerKw");
+        } else if (modulesPerString > maxModules) {
+          warnings.push(`Atenção: Não é possível atingir a potência desejada sem exceder a tensão máxima do inversor.`);
+        } else {
+          // Check current with parallel strings
+          const totalImpPerMppt = stringsPerMppt * module.imp;
+          const totalIscPerMppt = stringsPerMppt * module.isc;
 
-        recommendedModules = actualModules;
-        recommendedStrings = strings;
-        recommendedStringsPerMppt = stringsPerMppt;
-        totalSystemPowerKw = (actualModules * module.power) / 1000;
-        if (module.area) {
-          totalAreaM2 = actualModules * module.area;
+          if (totalIscPerMppt > inverter.maxInputCurrent) {
+             errors.push(`Incompatível: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de curto-circuito de ${totalIscPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A).`);
+             errorFields.push("site.desiredPowerKw", "inverter.maxInputCurrent");
+          } else if (totalImpPerMppt > inverter.maxInputCurrent) {
+             warnings.push(`Atenção: O arranjo recomendado possui ${stringsPerMppt} string(s) em paralelo por MPPT, resultando em uma corrente de operação de ${totalImpPerMppt.toFixed(1)}A, que excede a corrente máxima do inversor (${inverter.maxInputCurrent}A). Haverá limitação de potência (clipping).`);
+             warningFields.push("site.desiredPowerKw", "inverter.maxInputCurrent");
+          }
+
+          recommendedModules = actualModules;
+          recommendedStrings = strings;
+          recommendedStringsPerMppt = stringsPerMppt;
+          totalSystemPowerKw = (actualModules * module.power) / 1000;
+          if (module.area) {
+            totalAreaM2 = actualModules * module.area;
+          }
         }
       }
     }
