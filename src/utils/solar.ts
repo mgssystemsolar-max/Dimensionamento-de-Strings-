@@ -8,6 +8,9 @@ export interface ModuleSpecs {
   imp: number; // Amps
   tempCoeffVoc: number; // %/°C (usually negative, e.g., -0.29)
   tempCoeffVmp: number; // %/°C (usually negative, e.g., -0.35)
+  tempSTC?: number; // °C (Standard Test Conditions Temperature, default 25)
+  width?: number; // mm
+  length?: number; // mm
   area?: number; // m²
 }
 
@@ -174,13 +177,14 @@ export function calculateStringSizing(
   }
 
   // 1. Calculate Temperature Corrected Voltages
-  // Formula: V_new = V_stc * (1 + (T_new - 25) * (Coeff / 100))
+  const tempSTC = module.tempSTC ?? 25;
+  // Formula: V_new = V_stc * (1 + (T_new - T_stc) * (Coeff / 100))
   
   // Voc rises as temp drops. We need Voc at Min Temp to ensure we don't blow the inverter.
-  const vocMax = module.voc * (1 + (site.minTemp - 25) * (module.tempCoeffVoc / 100));
+  const vocMax = module.voc * (1 + (site.minTemp - tempSTC) * (module.tempCoeffVoc / 100));
   
   // Vmp drops as temp rises. We need Vmp at Max Temp to ensure we stay above Min MPPT.
-  const vmpMin = module.vmp * (1 + (site.maxTemp - 25) * (module.tempCoeffVmp / 100));
+  const vmpMin = module.vmp * (1 + (site.maxTemp - tempSTC) * (module.tempCoeffVmp / 100));
 
   // 2. Calculate Limits
   const maxModules = Math.floor(inverter.maxInputVoltage / vocMax);
@@ -212,20 +216,29 @@ export function calculateStringSizing(
   let totalSystemPowerKw: number | undefined;
   let totalAreaM2: number | undefined;
 
+  let targetModules = 0;
+  let hasTarget = false;
+
   if (site.desiredPowerKw && site.desiredPowerKw > 0) {
     const desiredPowerW = site.desiredPowerKw * 1000;
-    const targetModules = Math.ceil(desiredPowerW / module.power);
-    
-    // Check space constraint if provided
-    let allowedModulesBySpace = targetModules;
-    if (site.availableSpaceM2 && site.availableSpaceM2 > 0 && module.area && module.area > 0) {
-      allowedModulesBySpace = Math.floor(site.availableSpaceM2 / module.area);
-      if (targetModules > allowedModulesBySpace) {
-        warnings.push(`Atenção: A área disponível (${site.availableSpaceM2}m²) comporta no máximo ${allowedModulesBySpace} módulos, o que é menor que os ${targetModules} módulos necessários para a potência desejada.`);
-        warningFields.push("site.availableSpaceM2", "site.desiredPowerKw");
-      }
-    }
+    targetModules = Math.ceil(desiredPowerW / module.power);
+    hasTarget = true;
+  }
 
+  let allowedModulesBySpace = targetModules;
+  if (site.availableSpaceM2 && site.availableSpaceM2 > 0 && module.area && module.area > 0) {
+    allowedModulesBySpace = Math.floor(site.availableSpaceM2 / module.area);
+    if (hasTarget && targetModules > allowedModulesBySpace) {
+      warnings.push(`Atenção: A área disponível (${site.availableSpaceM2}m²) comporta no máximo ${allowedModulesBySpace} módulos, o que é menor que os ${targetModules} módulos necessários para a potência desejada.`);
+      warningFields.push("site.availableSpaceM2", "site.desiredPowerKw");
+    }
+    if (!hasTarget) {
+      targetModules = allowedModulesBySpace;
+      hasTarget = true;
+    }
+  }
+
+  if (hasTarget) {
     const actualModules = Math.min(targetModules, allowedModulesBySpace);
     
     if (actualModules > 0) {

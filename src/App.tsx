@@ -46,7 +46,11 @@ export default function App() {
     isc: 14.0,
     imp: 13.2,
     tempCoeffVoc: -0.27,
-    tempCoeffVmp: -0.35,
+    tempCoeffVmp: -0.34,
+    tempSTC: 25,
+    width: 1134,
+    length: 2278,
+    area: (1134 * 2278) / 1000000,
   });
 
   const [selectedPreset, setSelectedPreset] = useState<string>("");
@@ -243,7 +247,13 @@ export default function App() {
            if (matchedPreset) {
              handlePresetSelect(matchedPreset);
            } else {
-             setModule(prev => ({ ...prev, ...data }));
+             setModule(prev => {
+               const newData = { ...prev, ...data };
+               if (newData.width && newData.length) {
+                 newData.area = (newData.width * newData.length) / 1000000;
+               }
+               return newData;
+             });
              setSelectedPreset("Módulo Importado (Drive)");
            }
          } catch (err) {
@@ -310,6 +320,10 @@ export default function App() {
       imp: preset.imp,
       tempCoeffVoc: preset.tempCoeffVoc,
       tempCoeffVmp: preset.tempCoeffVmp,
+      tempSTC: preset.tempSTC || 25,
+      width: preset.width || 1134,
+      length: preset.length || 2278,
+      area: preset.area || ((preset.width || 1134) * (preset.length || 2278) / 1000000),
     });
     setIsSearchOpen(false);
     setSearchTerm("");
@@ -392,10 +406,13 @@ export default function App() {
         if (matchedPreset) {
           handlePresetSelect(matchedPreset);
         } else {
-          setModule(prev => ({
-            ...prev,
-            ...data
-          }));
+          setModule(prev => {
+            const newData = { ...prev, ...data };
+            if (newData.width && newData.length) {
+              newData.area = (newData.width * newData.length) / 1000000;
+            }
+            return newData;
+          });
           setSelectedPreset("Módulo OCR (Lido)");
           setModuleDiscrepancies([]);
           setCompareMessage(null);
@@ -1238,6 +1255,13 @@ export default function App() {
                   unit="°C" 
                   status={getFieldStatus('site.maxTemp')}
                 />
+                <InputGroup 
+                  label="Temperatura STC do Módulo" 
+                  value={module.tempSTC ?? 25} 
+                  onChange={(v) => setModule({...module, tempSTC: v})} 
+                  unit="°C" 
+                  status={getFieldStatus('module.tempSTC')}
+                />
                 <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-slate-100 mt-2">
                   <InputGroup 
                     label="Potência Desejada (Opcional)" 
@@ -1433,14 +1457,38 @@ export default function App() {
                     status={getFieldStatus('module.tempCoeffVmp')}
                   />
                   <InputGroup 
-                    label="Área do Módulo" 
-                    value={module.area || 0} 
-                    onChange={(v) => setModule({...module, area: v})} 
-                    unit="m²" 
-                    step={0.01}
+                    label="Largura do Módulo" 
+                    value={module.width || 0} 
+                    onChange={(v) => {
+                      const newArea = v && module.length ? (v * module.length) / 1000000 : 0;
+                      setModule({...module, width: v, area: newArea});
+                    }} 
+                    unit="mm" 
+                    step={1}
                     min={0}
-                    status={getFieldStatus('module.area')}
+                    status={getFieldStatus('module.width')}
                   />
+                  <InputGroup 
+                    label="Comprimento do Módulo" 
+                    value={module.length || 0} 
+                    onChange={(v) => {
+                      const newArea = module.width && v ? (module.width * v) / 1000000 : 0;
+                      setModule({...module, length: v, area: newArea});
+                    }} 
+                    unit="mm" 
+                    step={1}
+                    min={0}
+                    status={getFieldStatus('module.length')}
+                  />
+                  <div className="flex flex-col justify-center sm:col-span-2">
+                    <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Área Calculada</label>
+                    <input 
+                      type="text" 
+                      value={module.area ? `${module.area.toFixed(2)} m²` : "0.00 m²"} 
+                      readOnly
+                      className="w-full mt-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-500 shadow-sm focus:outline-none cursor-not-allowed"
+                    />
+                  </div>
                 </div>
               </div>
             </motion.section>

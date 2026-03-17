@@ -190,6 +190,7 @@ export function generatePDF(
   sectionTitle("2. Condições Locais");
   row("Temperatura Mínima:", `${site.minTemp}°C`);
   row("Temperatura Máxima:", `${site.maxTemp}°C`, 90);
+  row("Temp. STC (Módulo):", `${module.tempSTC ?? 25}°C`, 150);
   y += 12;
 
   // --- Section 3: Análise Técnica ---
