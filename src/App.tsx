@@ -9,6 +9,7 @@ import { extractInverterData, extractModuleData } from './utils/ocr';
 import { generatePDF } from './utils/pdf';
 import { initiateGoogleAuth, searchDriveFiles, downloadDriveFile, DriveFile } from './utils/drive';
 import { ElectricalDiagramPrint } from './components/ElectricalDiagramPrint';
+import { LoginScreen } from './components/LoginScreen';
 import { auth, db } from './firebase';
 
 interface HistoryItem {
@@ -34,6 +35,8 @@ interface HistoryItem {
 }
 
 export default function App() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
@@ -106,12 +109,34 @@ export default function App() {
 
   // Load history on mount and listen to auth state
   useEffect(() => {
+    const checkEmailLink = async () => {
+      const { isSignInWithEmailLink, signInWithEmailLink } = await import('firebase/auth');
+      if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem('emailForSignIn');
+        if (!email) {
+          email = window.prompt('Por favor, confirme seu e-mail para acessar:');
+        }
+        if (email) {
+          try {
+            await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem('emailForSignIn');
+            // Remove the link parameters from URL
+            window.history.replaceState(null, '', window.location.pathname);
+          } catch (error) {
+            console.error("Erro ao fazer login com link:", error);
+          }
+        }
+      }
+    };
+    checkEmailLink();
+
     const unsubscribeAuth = import('firebase/auth').then(({ onAuthStateChanged }) => {
       return onAuthStateChanged(auth, (user) => {
         if (user && user.email) {
           const isPasswordProvider = user.providerData.some(p => p.providerId === 'password');
           setUserEmail(user.email);
           setIsAdmin(isPasswordProvider);
+          setIsLoggedIn(true);
           setGoogleEmail(user.email);
 
           // Load history
@@ -160,6 +185,7 @@ export default function App() {
         } else {
           setUserEmail("");
           setIsAdmin(false);
+          setIsLoggedIn(false);
           // Load local history for unauthenticated users
           const saved = localStorage.getItem('solarHistory');
           if (saved) {
@@ -170,6 +196,7 @@ export default function App() {
             }
           }
         }
+        setIsAuthChecking(false);
       });
     });
 
@@ -598,6 +625,18 @@ export default function App() {
     if (moduleDiscrepancies.includes(field)) return 'warning';
     return 'default';
   };
+
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isLoggedIn) {
+    return <LoginScreen />;
+  }
 
   const renderContent = () => {
     if (currentView === 'admin' && isAdmin) {
@@ -1771,7 +1810,31 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-             {/* Auth UI removed to keep the app free and open */}
+             <div className="hidden md:flex flex-col items-end mr-2">
+               <span className="text-xs font-medium text-slate-900 flex items-center gap-1">
+                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                 Conectado
+               </span>
+               <span className="text-[10px] text-slate-500 truncate max-w-[150px]">{userEmail}</span>
+             </div>
+             
+             <button
+               onClick={() => {
+                 import('firebase/auth').then(({ signOut }) => {
+                   signOut(auth).then(() => {
+                     setIsLoggedIn(false);
+                     setHistory([]);
+                     setDriveToken(null);
+                     setDriveFiles([]);
+                   }).catch(console.error);
+                 });
+               }}
+               className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg"
+               title="Sair / Desconectar"
+             >
+               <LogOut size={18} />
+               <span className="hidden sm:inline">Sair</span>
+             </button>
           </div>
         </div>
       </header>
