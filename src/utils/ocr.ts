@@ -94,6 +94,23 @@ const prepareFileParts = async (file: File) => {
   }
 };
 
+function cleanAndParseJSON(text: string) {
+  try {
+    // Try to parse directly first
+    return JSON.parse(text);
+  } catch (e) {
+    // If it fails, try to clean up markdown code blocks
+    const cleaned = text.replace(/^```(?:json)?\n?/i, '').replace(/\n?```$/i, '').trim();
+    try {
+      return JSON.parse(cleaned);
+    } catch (e2) {
+      // If it still fails, it might be truncated or severely malformed
+      console.error("Failed to parse JSON even after cleanup. Raw text:", text.substring(0, 500) + "...");
+      throw new Error("Não foi possível extrair os dados do documento. O formato retornado é inválido.");
+    }
+  }
+}
+
 export async function extractInverterData(file: File): Promise<Partial<InverterSpecs>> {
   try {
     const ai = getAiClient();
@@ -105,22 +122,39 @@ export async function extractInverterData(file: File): Promise<Partial<InverterS
         parts: [
           ...parts,
           {
-            text: "Extraia as especificações técnicas deste datasheet de inversor solar. Retorne APENAS um objeto JSON com os valores numéricos e o modelo/fabricante encontrados.",
+            text: `Extraia as especificações técnicas (STC - Standard Test Conditions) deste datasheet solar com foco em segurança elétrica. Retorne APENAS um objeto JSON seguindo o esquema fornecido.
+
+REGRAS CRÍTICAS PARA EVITAR ERROS:
+
+Fidelidade Numérica: Extraia os valores exatamente como impressos. Não arredonde e não tente deduzir valores ausentes.
+
+Diferenciação de Corrente: No caso de inversores, diferencie 'Max. Input Current' (total do MPPT) de 'Max. Current per Connector' (limite físico do terminal MC4). Se o campo 'per connector' não existir, procure por 'Max. fuse rating' ou mencione no campo de modelo.
+
+Coeficientes de Temperatura: Capture o sinal (geralmente negativo, ex: -0.28). Se o datasheet fornecer em V/°C, mantenha o valor e adicione a unidade na string do modelo para que eu possa tratar via código.
+
+Limites MPPT: Identifique com precisão a 'Tensão de Partida' (Start-up voltage) e a 'Tensão Mínima de MPPT'.
+
+COMPATIBILIDADE TÉCNICA (Check Interno):
+Compare a Corrente de Máxima Potência (Imp) do módulo com a Corrente Máxima por Conector do inversor. Se o módulo for superior, adicione um campo 'Alerta_Seguranca' no JSON detalhando o risco de superaquecimento dos conectores.`,
           },
         ],
       },
       config: {
+        maxOutputTokens: 1024,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            model: { type: Type.STRING, description: "Nome do modelo do inversor" },
-            manufacturer: { type: Type.STRING, description: "Nome do fabricante do inversor" },
+            model: { type: Type.STRING, description: "Nome do modelo do inversor (máx 50 caracteres)" },
+            manufacturer: { type: Type.STRING, description: "Nome do fabricante do inversor (máx 50 caracteres)" },
             maxInputVoltage: { type: Type.NUMBER, description: "Tensão máxima de entrada (Max Input Voltage / Max DC Voltage) em Volts" },
             minMpptVoltage: { type: Type.NUMBER, description: "Tensão mínima da faixa de MPPT (Min MPPT Voltage) em Volts" },
             maxMpptVoltage: { type: Type.NUMBER, description: "Tensão máxima da faixa de MPPT (Max MPPT Voltage) em Volts" },
             maxInputCurrent: { type: Type.NUMBER, description: "Corrente máxima de entrada (Max Input Current) em Amperes" },
             numMppts: { type: Type.NUMBER, description: "Número de rastreadores MPPT (Number of MPPTs)" },
+            startupVoltage: { type: Type.NUMBER, description: "Tensão de Partida (Start-up voltage) em Volts" },
+            maxCurrentPerConnector: { type: Type.NUMBER, description: "Corrente Máxima por Conector (Max. Current per Connector) em Amperes" },
+            Alerta_Seguranca: { type: Type.STRING, description: "Alerta de segurança sobre superaquecimento de conectores, se aplicável" },
           },
         },
       },
@@ -129,7 +163,7 @@ export async function extractInverterData(file: File): Promise<Partial<InverterS
     const text = response.text;
     if (!text) return {};
     
-    return JSON.parse(text);
+    return cleanAndParseJSON(text);
   } catch (error) {
     console.error("Gemini OCR Error:", error);
     throw error;
@@ -147,17 +181,31 @@ export async function extractModuleData(file: File): Promise<Partial<ModuleSpecs
         parts: [
           ...parts,
           {
-            text: "Extraia as especificações técnicas (STC - Standard Test Conditions) deste datasheet de módulo/painel solar fotovoltaico. Retorne APENAS um objeto JSON com os valores numéricos e o modelo/fabricante encontrados.",
+            text: `Extraia as especificações técnicas (STC - Standard Test Conditions) deste datasheet solar com foco em segurança elétrica. Retorne APENAS um objeto JSON seguindo o esquema fornecido.
+
+REGRAS CRÍTICAS PARA EVITAR ERROS:
+
+Fidelidade Numérica: Extraia os valores exatamente como impressos. Não arredonde e não tente deduzir valores ausentes.
+
+Diferenciação de Corrente: No caso de inversores, diferencie 'Max. Input Current' (total do MPPT) de 'Max. Current per Connector' (limite físico do terminal MC4). Se o campo 'per connector' não existir, procure por 'Max. fuse rating' ou mencione no campo de modelo.
+
+Coeficientes de Temperatura: Capture o sinal (geralmente negativo, ex: -0.28). Se o datasheet fornecer em V/°C, mantenha o valor e adicione a unidade na string do modelo para que eu possa tratar via código.
+
+Limites MPPT: Identifique com precisão a 'Tensão de Partida' (Start-up voltage) e a 'Tensão Mínima de MPPT'.
+
+COMPATIBILIDADE TÉCNICA (Check Interno):
+Compare a Corrente de Máxima Potência (Imp) do módulo com a Corrente Máxima por Conector do inversor. Se o módulo for superior, adicione um campo 'Alerta_Seguranca' no JSON detalhando o risco de superaquecimento dos conectores.`,
           },
         ],
       },
       config: {
+        maxOutputTokens: 1024,
         responseMimeType: "application/json",
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            model: { type: Type.STRING, description: "Nome do modelo do módulo solar" },
-            manufacturer: { type: Type.STRING, description: "Nome do fabricante do módulo solar" },
+            model: { type: Type.STRING, description: "Nome do modelo do módulo solar (máx 50 caracteres)" },
+            manufacturer: { type: Type.STRING, description: "Nome do fabricante do módulo solar (máx 50 caracteres)" },
             power: { type: Type.NUMBER, description: "Potência nominal máxima (Pmax) em Watts" },
             voc: { type: Type.NUMBER, description: "Tensão de circuito aberto (Voc / Open Circuit Voltage) em Volts" },
             vmp: { type: Type.NUMBER, description: "Tensão de máxima potência (Vmp / Maximum Power Voltage) em Volts" },
@@ -168,6 +216,7 @@ export async function extractModuleData(file: File): Promise<Partial<ModuleSpecs
             tempSTC: { type: Type.NUMBER, description: "Temperatura de teste STC (Standard Test Conditions) em °C. Geralmente é 25°C." },
             width: { type: Type.NUMBER, description: "Largura do módulo (Width) em milímetros (mm)" },
             length: { type: Type.NUMBER, description: "Comprimento do módulo (Length/Height) em milímetros (mm)" },
+            Alerta_Seguranca: { type: Type.STRING, description: "Alerta de segurança sobre superaquecimento de conectores, se aplicável" },
           },
         },
       },
@@ -176,7 +225,27 @@ export async function extractModuleData(file: File): Promise<Partial<ModuleSpecs
     const text = response.text;
     if (!text) return {};
     
-    return JSON.parse(text);
+    const data = cleanAndParseJSON(text) as Partial<ModuleSpecs>;
+    
+    // Check if tempCoeffVoc or tempCoeffVmp are in V/°C (indicated in the model string)
+    if (data.model && data.model.includes("V/°C")) {
+      if (data.tempCoeffVoc && data.voc) {
+        // Convert V/°C to %/°C
+        data.tempCoeffVoc = (data.tempCoeffVoc / data.voc) * 100;
+        // Round to 3 decimal places
+        data.tempCoeffVoc = Math.round(data.tempCoeffVoc * 1000) / 1000;
+      }
+      if (data.tempCoeffVmp && data.vmp) {
+        // Convert V/°C to %/°C
+        data.tempCoeffVmp = (data.tempCoeffVmp / data.vmp) * 100;
+        // Round to 3 decimal places
+        data.tempCoeffVmp = Math.round(data.tempCoeffVmp * 1000) / 1000;
+      }
+      // Remove the unit from the model name to keep it clean
+      data.model = data.model.replace(/\s*\(?V\/°C\)?/g, "").trim();
+    }
+    
+    return data;
   } catch (error) {
     console.error("Gemini OCR Error:", error);
     throw error;

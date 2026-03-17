@@ -12,6 +12,7 @@ export interface ModuleSpecs {
   width?: number; // mm
   length?: number; // mm
   area?: number; // m²
+  Alerta_Seguranca?: string; // Safety alert from OCR
 }
 
 export interface InverterSpecs {
@@ -21,6 +22,9 @@ export interface InverterSpecs {
   maxMpptVoltage: number; // Volts
   maxInputCurrent: number; // Amps
   numMppts?: number; // Number of MPPTs
+  startupVoltage?: number; // Volts (Start-up voltage)
+  maxCurrentPerConnector?: number; // Amps (Max. Current per Connector)
+  Alerta_Seguranca?: string; // Safety alert from OCR
 }
 
 export interface SiteConditions {
@@ -61,6 +65,13 @@ export function calculateStringSizing(
   const warningFields: string[] = [];
 
   // --- 0. Input Sanity Checks ---
+
+  if (module.Alerta_Seguranca) {
+    warnings.push(`Alerta de Segurança (Módulo): ${module.Alerta_Seguranca}`);
+  }
+  if (inverter.Alerta_Seguranca) {
+    warnings.push(`Alerta de Segurança (Inversor): ${inverter.Alerta_Seguranca}`);
+  }
 
   // Module Checks
   if (module.power <= 0) {
