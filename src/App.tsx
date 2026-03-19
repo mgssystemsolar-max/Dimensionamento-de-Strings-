@@ -10,8 +10,6 @@ import { generatePDF } from './utils/pdf';
 import { initiateGoogleAuth, searchDriveFiles, downloadDriveFile, DriveFile } from './utils/drive';
 import { ElectricalDiagramPrint } from './components/ElectricalDiagramPrint';
 
-import { Login } from './components/Login';
-
 interface HistoryItem {
   id: string;
   date: string;
@@ -37,36 +35,6 @@ interface HistoryItem {
 export default function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
-
-  const [session, setSession] = useState<any>(null);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
-
-  useEffect(() => {
-    fetch('/api/auth/session')
-      .then(res => res.json())
-      .then(data => {
-        if (Object.keys(data).length > 0) {
-          setSession(data);
-        } else {
-          setSession(null);
-        }
-      })
-      .catch(() => setSession(null))
-      .finally(() => setIsAuthChecking(false));
-  }, []);
-
-  const handleLogout = async () => {
-    await fetch('/api/auth/signout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({
-        callbackUrl: window.location.origin,
-      }),
-    });
-    setSession(null);
-  };
 
   const [module, setModule] = useState<ModuleSpecs>({
     power: 550,
@@ -1695,18 +1663,6 @@ export default function App() {
     );
   };
 
-  if (isAuthChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return <Login />;
-  }
-
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-amber-100 selection:text-amber-900 flex flex-col">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
@@ -1723,12 +1679,7 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              <LogOut size={18} /> Sair
-            </button>
+            {/* Removed Auth UI */}
           </div>
         </div>
       </header>

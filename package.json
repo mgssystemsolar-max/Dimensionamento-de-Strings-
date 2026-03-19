@@ -12,11 +12,7 @@
     "start": "node server.ts"
   },
   "dependencies": {
-    "@auth/express": "^0.12.1",
-    "@auth/prisma-adapter": "^2.11.1",
     "@google/genai": "^1.29.0",
-    "@prisma/adapter-pg": "^7.5.0",
-    "@prisma/client": "^7.5.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",
     "better-sqlite3": "^12.4.1",
@@ -27,11 +23,8 @@
     "motion": "^12.23.24",
     "nodemailer": "^7.0.13",
     "pdfjs-dist": "^5.5.207",
-    "pg": "^8.20.0",
-    "prisma": "^7.5.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "resend": "^6.9.4",
     "vite": "^6.2.0"
   },
   "devDependencies": {
