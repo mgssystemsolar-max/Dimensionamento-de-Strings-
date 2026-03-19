@@ -9,8 +9,8 @@ import { extractInverterData, extractModuleData } from './utils/ocr';
 import { generatePDF } from './utils/pdf';
 import { initiateGoogleAuth, searchDriveFiles, downloadDriveFile, DriveFile } from './utils/drive';
 import { ElectricalDiagramPrint } from './components/ElectricalDiagramPrint';
-import { LoginScreen } from './components/LoginScreen';
-import { auth, db } from './firebase';
+
+import { Login } from './components/Login';
 
 interface HistoryItem {
   id: string;
@@ -35,10 +35,38 @@ interface HistoryItem {
 }
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+
+  const [session, setSession] = useState<any>(null);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/auth/session')
+      .then(res => res.json())
+      .then(data => {
+        if (Object.keys(data).length > 0) {
+          setSession(data);
+        } else {
+          setSession(null);
+        }
+      })
+      .catch(() => setSession(null))
+      .finally(() => setIsAuthChecking(false));
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/signout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        callbackUrl: window.location.origin,
+      }),
+    });
+    setSession(null);
+  };
 
   const [module, setModule] = useState<ModuleSpecs>({
     power: 550,
@@ -107,100 +135,18 @@ export default function App() {
   const [isDriveLoading, setIsDriveLoading] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState<'inverter' | 'module' | null>(null);
 
-  // Load history on mount and listen to auth state
+  // Load history on mount
   useEffect(() => {
-    const checkEmailLink = async () => {
-      const { isSignInWithEmailLink, signInWithEmailLink } = await import('firebase/auth');
-      if (isSignInWithEmailLink(auth, window.location.href)) {
-        let email = window.localStorage.getItem('emailForSignIn');
-        if (!email) {
-          email = window.prompt('Por favor, confirme seu e-mail para acessar:');
-        }
-        if (email) {
-          try {
-            await signInWithEmailLink(auth, email, window.location.href);
-            window.localStorage.removeItem('emailForSignIn');
-            // Remove the link parameters from URL
-            window.history.replaceState(null, '', window.location.pathname);
-          } catch (error) {
-            console.error("Erro ao fazer login com link:", error);
-          }
-        }
+    // Load local history
+    const saved = localStorage.getItem('solarHistory');
+    if (saved) {
+      try {
+        setHistory(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse history", e);
       }
-    };
-    checkEmailLink();
+    }
 
-    const unsubscribeAuth = import('firebase/auth').then(({ onAuthStateChanged }) => {
-      return onAuthStateChanged(auth, (user) => {
-        if (user && user.email) {
-          const isPasswordProvider = user.providerData.some(p => p.providerId === 'password');
-          setUserEmail(user.email);
-          setIsAdmin(isPasswordProvider);
-          setIsLoggedIn(true);
-          setGoogleEmail(user.email);
-
-          // Load history
-          const loadHistory = async () => {
-            try {
-              const { collection, query, getDocs, limit } = await import('firebase/firestore');
-              const q = query(
-                collection(db, `users/${user.uid}/history`),
-                limit(20)
-              );
-              const querySnapshot = await getDocs(q);
-              const firestoreHistory: HistoryItem[] = [];
-              querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                firestoreHistory.push({
-                  id: doc.id,
-                  date: data.date,
-                  moduleName: data.moduleName,
-                  inverterName: data.inverterName,
-                  result: data.result,
-                  module: data.module,
-                  inverter: data.inverter,
-                  site: data.site,
-                  projectDetails: data.projectDetails
-                });
-              });
-              if (firestoreHistory.length > 0) {
-                setHistory(firestoreHistory);
-                return;
-              }
-            } catch (error) {
-              console.error("Error loading history from Firestore", error);
-            }
-            
-            // Fallback to local storage
-            const saved = localStorage.getItem('solarHistory');
-            if (saved) {
-              try {
-                setHistory(JSON.parse(saved));
-              } catch (e) {
-                console.error("Failed to parse history", e);
-              }
-            }
-          };
-          loadHistory();
-        } else {
-          setUserEmail("");
-          setIsAdmin(false);
-          setIsLoggedIn(false);
-          // Load local history for unauthenticated users
-          const saved = localStorage.getItem('solarHistory');
-          if (saved) {
-            try {
-              setHistory(JSON.parse(saved));
-            } catch (e) {
-              console.error("Failed to parse history", e);
-            }
-          }
-        }
-        setIsAuthChecking(false);
-      });
-    });
-
-    // Listen for auth messages
     const handleAuthMessage = (event: MessageEvent) => {
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         setDriveToken(event.data.accessToken);
@@ -214,7 +160,6 @@ export default function App() {
     
     return () => {
       window.removeEventListener('message', handleAuthMessage);
-      unsubscribeAuth.then(unsub => unsub());
     };
   }, []);
 
@@ -498,43 +443,11 @@ export default function App() {
     const newHistory = [newItem, ...history].slice(0, 20); // Keep last 20
     setHistory(newHistory);
     localStorage.setItem('solarHistory', JSON.stringify(newHistory));
-
-    // Save to Firestore if user is authenticated
-    if (auth.currentUser) {
-      try {
-        const { doc, setDoc } = await import('firebase/firestore');
-        const docRef = doc(db, `users/${auth.currentUser.uid}/history/${newItem.id}`);
-        await setDoc(docRef, {
-          userId: auth.currentUser.uid,
-          date: newItem.date,
-          moduleName: newItem.moduleName,
-          inverterName: newItem.inverterName,
-          result: newItem.result,
-          module: newItem.module,
-          inverter: newItem.inverter,
-          site: newItem.site,
-          projectDetails: newItem.projectDetails
-        });
-      } catch (error) {
-        console.error("Error saving to Firestore", error);
-      }
-    }
   };
 
   const clearHistory = async () => {
     setHistory([]);
     localStorage.removeItem('solarHistory');
-    
-    if (auth.currentUser) {
-      try {
-        const { collection, getDocs, deleteDoc, doc } = await import('firebase/firestore');
-        const querySnapshot = await getDocs(collection(db, `users/${auth.currentUser.uid}/history`));
-        const deletePromises = querySnapshot.docs.map(document => deleteDoc(doc(db, `users/${auth.currentUser.uid}/history/${document.id}`)));
-        await Promise.all(deletePromises);
-      } catch (error) {
-        console.error("Error clearing history from Firestore", error);
-      }
-    }
   };
 
   const [showPdfModal, setShowPdfModal] = useState(false);
@@ -625,18 +538,6 @@ export default function App() {
     if (moduleDiscrepancies.includes(field)) return 'warning';
     return 'default';
   };
-
-  if (isAuthChecking) {
-    return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!isLoggedIn) {
-    return <LoginScreen />;
-  }
 
   const renderContent = () => {
     if (currentView === 'admin' && isAdmin) {
@@ -1794,6 +1695,18 @@ export default function App() {
     );
   };
 
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500"></div>
+      </div>
+    );
+  }
+
+  if (!session) {
+    return <Login />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-amber-100 selection:text-amber-900 flex flex-col">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
@@ -1810,31 +1723,12 @@ export default function App() {
             </div>
           </div>
           <div className="flex items-center gap-4">
-             <div className="hidden md:flex flex-col items-end mr-2">
-               <span className="text-xs font-medium text-slate-900 flex items-center gap-1">
-                 <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                 Conectado
-               </span>
-               <span className="text-[10px] text-slate-500 truncate max-w-[150px]">{userEmail}</span>
-             </div>
-             
-             <button
-               onClick={() => {
-                 import('firebase/auth').then(({ signOut }) => {
-                   signOut(auth).then(() => {
-                     setIsLoggedIn(false);
-                     setHistory([]);
-                     setDriveToken(null);
-                     setDriveFiles([]);
-                   }).catch(console.error);
-                 });
-               }}
-               className="flex items-center gap-2 text-sm font-medium text-red-600 hover:text-red-700 transition-colors bg-red-50 hover:bg-red-100 px-3 py-2 rounded-lg"
-               title="Sair / Desconectar"
-             >
-               <LogOut size={18} />
-               <span className="hidden sm:inline">Sair</span>
-             </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+            >
+              <LogOut size={18} /> Sair
+            </button>
           </div>
         </div>
       </header>
