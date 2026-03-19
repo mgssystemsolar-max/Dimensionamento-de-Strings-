@@ -316,30 +316,6 @@ export const MODULE_PRESETS: ModulePreset[] = [
     tempCoeffVmp: -0.30,
   },
 
-  // LONGI SOLAR
-  {
-    manufacturer: "Longi Solar",
-    name: "Longi Hi-MO 5 LR5-72HPH 550M",
-    power: 550,
-    voc: 49.80,
-    vmp: 41.95,
-    isc: 13.98,
-    imp: 13.12,
-    tempCoeffVoc: -0.265,
-    tempCoeffVmp: -0.34,
-  },
-  {
-    manufacturer: "Longi Solar",
-    name: "Longi Hi-MO 6 LR5-72HTH 580M",
-    power: 580,
-    voc: 52.21,
-    vmp: 44.06,
-    isc: 14.20,
-    imp: 13.17,
-    tempCoeffVoc: -0.23,
-    tempCoeffVmp: -0.29,
-  },
-
   // JA SOLAR
   {
     manufacturer: "JA Solar",

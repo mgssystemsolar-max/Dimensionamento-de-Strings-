@@ -9,6 +9,7 @@ import { extractInverterData, extractModuleData } from './utils/ocr';
 import { generatePDF } from './utils/pdf';
 import { initiateGoogleAuth, searchDriveFiles, downloadDriveFile, DriveFile } from './utils/drive';
 import { ElectricalDiagramPrint } from './components/ElectricalDiagramPrint';
+import { Login } from './components/Login';
 
 interface HistoryItem {
   id: string;
@@ -33,6 +34,8 @@ interface HistoryItem {
 }
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthChecking, setIsAuthChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState("");
 
@@ -103,7 +106,7 @@ export default function App() {
   const [isDriveLoading, setIsDriveLoading] = useState(false);
   const [showDriveModal, setShowDriveModal] = useState<'inverter' | 'module' | null>(null);
 
-  // Load history on mount
+  // Load history and auth on mount
   useEffect(() => {
     // Load local history
     const saved = localStorage.getItem('solarHistory');
@@ -114,6 +117,13 @@ export default function App() {
         console.error("Failed to parse history", e);
       }
     }
+
+    const auth = sessionStorage.getItem('solar_auth');
+    if (auth) {
+      setIsAuthenticated(true);
+      setUserEmail(auth);
+    }
+    setIsAuthChecking(false);
 
     const handleAuthMessage = (event: MessageEvent) => {
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
@@ -1663,6 +1673,24 @@ export default function App() {
     );
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('solar_auth');
+    setIsAuthenticated(false);
+    setUserEmail('');
+  };
+
+  if (isAuthChecking) {
+    return <div className="min-h-screen bg-slate-50 flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Login onLogin={(email) => {
+      sessionStorage.setItem('solar_auth', email);
+      setUserEmail(email);
+      setIsAuthenticated(true);
+    }} />;
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-amber-100 selection:text-amber-900 flex flex-col">
       <header className="bg-white border-b border-slate-200 sticky top-0 z-20">
@@ -1722,6 +1750,12 @@ export default function App() {
                   <Shield size={18} /> Painel Admin
                 </button>
               )}
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors mt-8 text-slate-600 hover:bg-red-50 hover:text-red-600"
+              >
+                <LogOut size={18} /> Sair
+              </button>
             </nav>
           </div>
         </aside>
