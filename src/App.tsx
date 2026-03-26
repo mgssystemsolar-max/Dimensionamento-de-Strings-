@@ -951,6 +951,27 @@ export default function App() {
                     <option value="Outra">Outra</option>
                   </select>
                 </div>
+                <div>
+                  <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Strings por MPPT</label>
+                  <input 
+                    type="number" 
+                    min="1"
+                    max="20"
+                    value={site.desiredStringsPerMppt === undefined ? 1 : site.desiredStringsPerMppt} 
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '') {
+                        setSite({...site, desiredStringsPerMppt: undefined});
+                      } else {
+                        const parsed = parseInt(val);
+                        if (!isNaN(parsed)) {
+                          setSite({...site, desiredStringsPerMppt: Math.min(20, Math.max(1, parsed))});
+                        }
+                      }
+                    }}
+                    className="w-full mt-1 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-amber-500 focus:ring-amber-500"
+                  />
+                </div>
                 
                 {/* New precise location and time fields */}
                 <div className="sm:col-span-2 pt-4 border-t border-slate-100 mt-2">
@@ -1514,17 +1535,18 @@ export default function App() {
                         <input 
                           type="number" 
                           min="1" 
+                          max="20"
                           step="1"
                           value={site.desiredStringsPerMppt === undefined ? 1 : site.desiredStringsPerMppt}
                           onChange={(e) => {
                             const val = e.target.value;
                             if (val === '') {
-                              // Temporarily set to 0 or undefined to allow clearing the input
-                              setSite({...site, desiredStringsPerMppt: 0});
+                              // Temporarily set to undefined to allow clearing the input
+                              setSite({...site, desiredStringsPerMppt: undefined});
                             } else {
                               const parsed = parseInt(val);
                               if (!isNaN(parsed)) {
-                                setSite({...site, desiredStringsPerMppt: parsed});
+                                setSite({...site, desiredStringsPerMppt: Math.min(20, Math.max(1, parsed))});
                               }
                             }
                           }}
@@ -1532,6 +1554,8 @@ export default function App() {
                             const val = parseInt(e.target.value);
                             if (isNaN(val) || val < 1) {
                               setSite({...site, desiredStringsPerMppt: 1});
+                            } else if (val > 20) {
+                              setSite({...site, desiredStringsPerMppt: 20});
                             }
                           }}
                           className="w-16 rounded-md border border-slate-300 px-2 py-1 text-xs text-slate-900 shadow-sm focus:outline-none focus:ring-1 focus:border-indigo-500 focus:ring-indigo-500"

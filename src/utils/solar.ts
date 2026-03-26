@@ -40,6 +40,7 @@ export interface SizingResult {
   minModules: number;
   vocMax: number; // Voc at min temp
   vmpMin: number; // Vmp at max temp
+  vmpMax: number; // Vmp at min temp
   isCompatible: boolean;
   errors: string[];
   warnings: string[];
@@ -179,6 +180,7 @@ export function calculateStringSizing(
       minModules: 0,
       vocMax: 0,
       vmpMin: 0,
+      vmpMax: 0,
       isCompatible: false,
       errors,
       warnings,
@@ -196,6 +198,9 @@ export function calculateStringSizing(
   
   // Vmp drops as temp rises. We need Vmp at Max Temp to ensure we stay above Min MPPT.
   const vmpMin = module.vmp * (1 + (site.maxTemp - tempSTC) * (module.tempCoeffVmp / 100));
+
+  // Vmp rises as temp drops. We need Vmp at Min Temp to ensure we don't exceed Max MPPT.
+  const vmpMax = module.vmp * (1 + (site.minTemp - tempSTC) * (module.tempCoeffVmp / 100));
 
   // 2. Calculate Limits
   const maxModules = vocMax > 0 ? Math.floor(inverter.maxInputVoltage / vocMax) : 0;
@@ -310,6 +315,7 @@ export function calculateStringSizing(
     minModules: Math.max(0, minModules),
     vocMax,
     vmpMin,
+    vmpMax,
     isCompatible: errorFields.length === 0,
     errors,
     warnings,
